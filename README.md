@@ -8,8 +8,8 @@ $$J =
 \min_{x_k, u_k} \sum_{k = 0} ^ {N-1} \left[\left(x_k - x_{k,r}\right)^T Q \left(x_k - x_{k,r}\right) + u_k^T R u_k\right] + \\
 \left(x_N - x_{N,r}\right)^T Q_N \left(x_N - x_{N,r}\right)
 $$
-$$
-s.t. \\
+
+$$s.t. \\
 x_{k + 1} = Ax_k + Bu_k \\
 \left[
 \begin{matrix}
@@ -42,7 +42,7 @@ where
 
 In this section, we will modify $J$ to fit for a speed planning problem. 
 
-$$ J = 
+$$J = 
 \min_{x_k, u_k} \sum_{k = 0} ^ {N-1} \left[\left(x_k - x_{k,r}\right)^T Q \left(x_k - x_{k,r}\right) + u_k^T R u_k + \dot {u}_k^T \dot{R} \dot{u}_k\right] + \\
 \left(x_N - x_{N,r}\right)^T Q_N \left(x_N - x_{N,r}\right) + \sigma_k^T W \sigma_k
 $$ 
@@ -66,14 +66,12 @@ $$
 ## Cost
 
 First of all, $\dot{u}_k$ could be written as 
-$$
-\dot{u}_k = \frac{u_k - u_{k-1}}{\Delta t}
+$$\dot{u}_k = \frac{u_k - u_{k-1}}{\Delta t}
 $$
 where $k = 1, ..., N - 1$.
 
 Perticular,
-$$
-\dot{u}_0 = \frac{u_0 - u_{-1}}{\Delta t_{-1}}
+$$\dot{u}_0 = \frac{u_0 - u_{-1}}{\Delta t_{-1}}
 $$
 where $-1$ index means the previous control command. For simplicity, we choose $\Delta t_{-1}$ equals $\Delta t$.
 
@@ -87,8 +85,7 @@ u_k^T R u_k + \dot {u}_k^T \dot{R} \dot{u}_k
 $$
 
 Then, we have
-$$
-Q = \left[\begin{matrix}
+$$Q = \left[\begin{matrix}
 Q & & & \\
 & \ddots \\
 & & Q & \\
