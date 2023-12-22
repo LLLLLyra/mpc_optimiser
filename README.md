@@ -78,24 +78,24 @@ where $-1$ index means the previous control command. For simplicity, we choose $
 Thus, the control part is 
 $$\begin{aligned}
 u_k^T R u_k + \dot {u}_k^T \dot{R} \dot{u}_k 
-&= u_k^T R u_k + \frac{(u_k - u_{k-1})^T}{\Delta t} \dot R \frac{u_k - u_{k-1}}{\Delta t} \\
-&= u_k^T(R + \frac{\dot R}{\Delta t^2})u_k + u_{k-1}^T\frac{\dot R}{\Delta t^2}u_{k-1}  \\
+&= u_k^T R u_k + \frac{(u_k - u_{k-1})^T}{\Delta t} \dot R \frac{u_k - u_{k-1}}{\Delta t}\\
+&= u_k^T(R + \frac{\dot R}{\Delta t^2})u_k + u_{k-1}^T\frac{\dot R}{\Delta t^2}u_{k-1}\\
 & - u_k^T \frac{\dot R}{\Delta t^2} u_{k-1} - u_{k-1}^T \frac{\dot R}{\Delta t^2} u_{k}
 \end{aligned}
 $$
 
 Then, we have
 $$Q = \left[\begin{matrix}
-Q & & & \\
-& \ddots \\
-& & Q & \\
-& & & Q_N \\
-& & & & R + \frac{\dot R}{\Delta t^2} & -\frac{\dot R}{\Delta t^2} \\
-& & & & -\frac{\dot R}{\Delta t^2} & \ddots &  \ddots \\
-& & & & & \ddots & R + 2\frac{\dot R}{\Delta t^2} & -\frac{\dot R}{\Delta t^2}  \\
-& & & & & &  -\frac{\dot R}{\Delta t^2} & R + \frac{\dot R}{\Delta t^2} \\
-& & & & & & & & w \\
-& & & & & & & & & \ddots \\
+Q & & &\\
+& \ddots\\
+& & Q &\\
+& & & Q_N\\
+& & & & R + \frac{\dot R}{\Delta t^2} & -\frac{\dot R}{\Delta t^2}\\
+& & & & -\frac{\dot R}{\Delta t^2} & \ddots &  \ddots\\
+& & & & & \ddots & R + 2\frac{\dot R}{\Delta t^2} & -\frac{\dot R}{\Delta t^2}\\
+& & & & & &  -\frac{\dot R}{\Delta t^2} & R + \frac{\dot R}{\Delta t^2}\\
+& & & & & & & & w\\
+& & & & & & & & & \ddots\\
 & & & & & & & & & & w
 \end{matrix}
 \right]
