@@ -189,7 +189,7 @@ b_{\dot u, k, min} \\
 \right] \\ 
 b_{ineq, upper} &= \left[
 \begin{matrix}
-x_{nax, k} \\
+x_{max, k} \\
 +\infty \\
 u_{max, k} \\
 b_{\dot u, k, max} \\
