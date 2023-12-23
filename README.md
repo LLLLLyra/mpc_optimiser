@@ -166,7 +166,8 @@ $$
 
 Generally, maximum ranges of acceleration and jerk of the ego vehicle constrain a speed planning problem. Slack variables are often applied to relax station and velocity constraints. In this section, we only support to relax $s_k$ and $\dot s_k$ with slack variables, denoting as $\sigma_{x,k}$ for upper bounds and $\mu_{x, k}$ for lower bounds.
 
-$$\begin{aligned}
+$$
+\begin{aligned}
 A_{ineq} &= 
 \left[
 \begin{matrix}
@@ -177,7 +178,6 @@ A_{ineq} &=
 & & 1_{\sigma_{x,k}}
 \end{matrix}
 \right] \\
-
 b_{ineq, lower} &= \left[
 \begin{matrix}
 -\infty \\
@@ -187,7 +187,6 @@ b_{\dot u, k, min} \\
 0_{\sigma_{x, k}}
 \end{matrix}
 \right] \\ 
-
 b_{ineq, upper} &= \left[
 \begin{matrix}
 x_{nax, k} \\
@@ -204,14 +203,12 @@ where
 $$\begin{aligned}
 a_{\dot u, k} &= \left[
 \begin{matrix}
-
 1 \\
 -1 & 1 \\
 & \ddots & \ddots \\
 & & -1 & 1
 \end{matrix}
 \right] \\
-
 b_{\dot u, k, max} &= 
 \left[
 \begin{matrix}
@@ -221,7 +218,6 @@ j_{max}\Delta t \\
 j_{max}\Delta t
 \end{matrix}
 \right] \\
-
 b_{\dot u, k, min} &= 
 \left[
 \begin{matrix}
