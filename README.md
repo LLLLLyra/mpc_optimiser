@@ -18,6 +18,7 @@ u_{min, k}
 \end{matrix}
 \right] 
 \leq
+A_{ineq}
 \left[
 \begin{matrix}
 x_k  \\
@@ -79,9 +80,9 @@ u_k^T R u_k + \dot {u}_k^T \dot{R} \dot{u}_k
 
 Then, we have
 $$Q = \left[\begin{matrix}
-Q & & &\\
+Q \\
 & \ddots\\
-& & Q &\\
+& & Q \\
 & & & Q_N\\
 & & & & R + \frac{\dot R}{\Delta t^2} & -\frac{\dot R}{\Delta t^2}\\
 & & & & -\frac{\dot R}{\Delta t^2} & \ddots &  \ddots\\
@@ -104,4 +105,133 @@ $$q = \left[\begin{matrix}
 
 ### Equality Constraints
 
+We consider an error differential equation
+$$\dot x(t) = A_c x(t) +B_c u(t)$$
+where $x(t)$ is state variable; $u(t)$ is control variable.
+
+Here, we have
+$$
+x_k = \left[s_k, \dot s_k\right]^T \\
+u_k = [\ddot s_k]
+$$
+
+Then,
+$$
+\begin{aligned}
+A_c &= \left[
+\begin{matrix}
+0 & 1 \\
+0 & 0
+\end{matrix}
+\right] \\
+B_c &= \left[
+\begin{matrix}
+0 \\
+1
+\end{matrix}
+\right]
+\end{aligned}
+$$
+
+Thus, the equality constraints 
+$$x_{k + 1} = (I + A_c \Delta t) x_k + B_c \Delta t u_k$$ 
+could be written in the following format
+$$
+b_{eq} \leq A_{eq}z \leq b_{eq}
+$$
+where
+$$
+A_{eq} = \left[
+\begin{matrix}
+-I & & & & 0 \\
+I + A_c \Delta t & -I & & & B_c + \Delta t \\
+& \ddots & \ddots & & & \ddots & \ddots\\
+& & I + A_c \Delta t & -I & & & B_c + \Delta t & 0
+\end{matrix}
+\right]
+$$
+
+$$
+b_{eq} = \left[
+\begin{matrix}
+-x_0 \\
+0 \\
+\vdots \\
+0
+\end{matrix}
+\right]
+$$
+
 ### Inequality Constraints
+
+Generally, maximum ranges of acceleration and jerk of the ego vehicle constrain a speed planning problem. Slack variables are often applied to relax station and velocity constraints. In this section, we only support to relax $s_k$ and $\dot s_k$ with slack variables, denoting as $\sigma_{x,k}$ for upper bounds and $\mu_{x, k}$ for lower bounds.
+
+$$\begin{aligned}
+A_{ineq} &= 
+\left[
+\begin{matrix}
+1_{x, k} &  & -\sigma_{x,k} \\
+1_{x,k} & & & \mu_{x, k} \\
+& 1_{u, k} \\
+& a_{\dot u, k} \\
+& & 1_{\sigma_{x,k}}
+\end{matrix}
+\right] \\
+
+b_{ineq, lower} &= \left[
+\begin{matrix}
+-\infty \\
+x_{min, k} \\
+u_{min, k} \\
+b_{\dot u, k, min} \\
+0_{\sigma_{x, k}}
+\end{matrix}
+\right] \\ 
+
+b_{ineq, upper} &= \left[
+\begin{matrix}
+x_{nax, k} \\
++\infty \\
+u_{max, k} \\
+b_{\dot u, k, max} \\
+\sigma_{max, x, k}
+\end{matrix}
+\right]
+\end{aligned}
+$$
+
+where 
+$$\begin{aligned}
+a_{\dot u, k} &= \left[
+\begin{matrix}
+
+1 \\
+-1 & 1 \\
+& \ddots & \ddots \\
+& & -1 & 1
+\end{matrix}
+\right] \\
+
+b_{\dot u, k, max} &= 
+\left[
+\begin{matrix}
+u_{-1} + j_{max}\Delta t \\
+j_{max}\Delta t \\ 
+\vdots \\ 
+j_{max}\Delta t
+\end{matrix}
+\right] \\
+
+b_{\dot u, k, min} &= 
+\left[
+\begin{matrix}
+u_{-1} + j_{min}\Delta t \\
+j_{min}\Delta t \\ 
+\vdots \\ 
+j_{min}\Delta t
+\end{matrix}
+\right]
+\end{aligned}
+$$
+
+Please Note that we do **NOT** support to contrain lower slack variables $\mu_{x, k}$ of $x_k$.
