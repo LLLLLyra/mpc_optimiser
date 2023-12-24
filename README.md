@@ -171,8 +171,8 @@ $$
 A_{ineq} &= 
 \left[
 \begin{matrix}
-1_{x, k} &  & -\sigma_{x,k} \\
-1_{x,k} & & & \mu_{x, k} \\
+1_{x, k} &  & -1_{\sigma_{x,k}} \\
+1_{x,k} & & & 1_{\mu_{x, k}} \\
 & 1_{u, k} \\
 & a_{\dot u, k} \\
 & & 1_{\sigma_{x,k}}
