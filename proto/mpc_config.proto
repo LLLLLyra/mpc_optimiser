@@ -1,0 +1,9 @@
+syntax = "proto2";
+
+package mpc;
+
+message MPCConfig {
+  optional double num_of_knots = 1;
+  optional int32 max_iter = 2;
+  optional double eps = 3;
+};
