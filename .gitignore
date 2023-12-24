@@ -1,4 +1,4 @@
 build/**
-.pb*
+*.pb*
 .vscode
 log/**
