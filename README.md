@@ -230,4 +230,4 @@ j_{min}\Delta t
 \end{aligned}
 $$
 
-Please Note that we do **NOT** support to contrain lower slack variables $\mu_{x, k}$ of $x_k$.
+Please Note that we do **NOT** support to constrain lower slack variables $\mu_{x, k}$ of $x_k$.
