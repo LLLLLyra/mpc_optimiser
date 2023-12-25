@@ -1,6 +1,7 @@
 #include "mpc_solver.h"
 
 #include "glog/logging.h"
+
 namespace mpc {
 MPCSolver::MPCSolver(const MPCConfig& config)
     : config_(config), horizon_(config_.num_of_knots()) {}
@@ -116,6 +117,8 @@ OSQPSettings* MPCSolver::Settings() {
 
 void MPCSolver::ExtractSolution(OSQPSolution* osqp_solution,
                                 OSQPInt num_of_var) {
+  std::vector<double>().swap(solution_);
+  solution_.reserve(num_of_var);
   for (size_t i = 0; i < num_of_var; ++i) {
     solution_.emplace_back(osqp_solution->x[i]);
   }
