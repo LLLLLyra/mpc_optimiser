@@ -1,11 +1,8 @@
 #pragma once
 
 #include <algorithm>
-#include <cfloat>
-#include <utility>
 #include <vector>
 
-#include "Eigen/Eigen"
 #include "osqp/osqp.h"
 #include "proto/mpc_config.pb.h"
 
@@ -24,24 +21,24 @@ class MPCSolver {
  public:
   MPCSolver(const MPCConfig &config);
 
-  bool Solve();
+  virtual bool Solve(int max_itr);
 
  protected:
-  void CalculateKernel(std::vector<OSQPFloat> *P_data,
-                       std::vector<OSQPInt> *P_indices,
-                       std::vector<OSQPInt> *P_indptr);
+  virtual void CalculateKernel(std::vector<OSQPFloat> *P_data,
+                               std::vector<OSQPInt> *P_indices,
+                               std::vector<OSQPInt> *P_indptr) = 0;
 
-  void CalculateOffset(std::vector<OSQPFloat> *q);
+  virtual void CalculateOffset(std::vector<OSQPFloat> *q) = 0;
 
-  void CalculateAffineConstraint(std::vector<OSQPFloat> *A_data,
-                                 std::vector<OSQPInt> *A_indices,
-                                 std::vector<OSQPInt> *A_indptr,
-                                 std::vector<OSQPFloat> *lower_bounds,
-                                 std::vector<OSQPFloat> *upper_bounds);
+  virtual void CalculateAffineConstraint(
+      std::vector<OSQPFloat> *A_data, std::vector<OSQPInt> *A_indices,
+      std::vector<OSQPInt> *A_indptr, std::vector<OSQPFloat> *lower_bounds,
+      std::vector<OSQPFloat> *upper_bounds) = 0;
 
   OSQPSettings *Settings();
   OSQPData *FormulateProblem();
   void FreeData(OSQPData *data);
+  void ExtractSolution(OSQPSolution *osqp_solution, OSQPInt num_of_var);
 
   template <typename T>
   T *CopyData(const std::vector<T> &vec) {
@@ -53,5 +50,7 @@ class MPCSolver {
  protected:
   MPCConfig config_;
   int horizon_;
+
+  std::vector<double> solution_;
 };
 }  // namespace mpc
