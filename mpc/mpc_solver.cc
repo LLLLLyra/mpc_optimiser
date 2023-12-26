@@ -98,6 +98,10 @@ void MPCSolver::FreeData(OSQPData* data) {
   delete[] data->A->i;
   delete[] data->A->p;
   delete[] data->A->x;
+
+	free(data->A);
+	free(data->P);
+	free(data);
 }
 
 OSQPSettings* MPCSolver::Settings() {
