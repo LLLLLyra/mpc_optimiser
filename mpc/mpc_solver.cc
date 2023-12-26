@@ -4,7 +4,9 @@
 
 namespace mpc {
 MPCSolver::MPCSolver(const MPCConfig& config)
-    : config_(config), horizon_(config_.num_of_knots()) {}
+    : config_(config),
+      horizon_(config_.num_of_knots()),
+      delta_t_(config_.delta_t()) {}
 
 bool MPCSolver::Solve(int max_iter) {
   OSQPData* data = FormulateProblem();
@@ -99,9 +101,9 @@ void MPCSolver::FreeData(OSQPData* data) {
   delete[] data->A->p;
   delete[] data->A->x;
 
-	free(data->A);
-	free(data->P);
-	free(data);
+  free(data->A);
+  free(data->P);
+  free(data);
 }
 
 OSQPSettings* MPCSolver::Settings() {

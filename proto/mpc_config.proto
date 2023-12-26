@@ -3,7 +3,20 @@ syntax = "proto2";
 package mpc;
 
 message MPCConfig {
-  optional double num_of_knots = 1;
+  required double num_of_knots = 1;
   optional int32 max_iter = 2;
   optional double eps = 3;
+  required double delta_t = 4;
+
+  optional LonMPCConfig lon_mpc_config = 5;
 };
+
+message LonMPCConfig {
+  required double s_init = 1;
+  required double ds_init = 2; 
+  required double prev_dds = 3;
+
+  repeated double matrix_q = 4;
+  repeated double matrix_r = 5;
+  repeated double matrix_r_dot = 6;
+}

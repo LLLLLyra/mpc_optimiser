@@ -47,9 +47,27 @@ class MPCSolver {
     return data;
   }
 
+  template <typename T>
+  void CSCInitHelper(
+      const std::vector<std::vector<std::pair<OSQPInt, T>>> &columns,
+      std::vector<T> *P_data, std::vector<OSQPInt> *P_indices,
+      std::vector<OSQPInt> *P_indptr) {
+    int ind_p = 0;
+    for (size_t i = 0; i < columns.size(); ++i) {
+      P_indptr->push_back(ind_p);
+      for (const auto &row_data_pair : columns[i]) {
+        P_data->push_back(row_data_pair.second);
+        P_indices->push_back(row_data_pair.first);
+        ++ind_p;
+      }
+    }
+    P_indptr->push_back(ind_p);
+  }
+
  protected:
   MPCConfig config_;
-  int horizon_;
+  size_t horizon_;
+  double delta_t_;
 
   std::vector<double> solution_;
 };
