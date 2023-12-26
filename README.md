@@ -79,7 +79,7 @@ u_k^T R u_k + \dot {u}_k^T \dot{R} \dot{u}_k
 \end{aligned}$$
 
 Then, we have
-$$Q = \left[\begin{matrix}
+$$P = \left[\begin{matrix}
 Q \\
 & \ddots\\
 & & Q \\
