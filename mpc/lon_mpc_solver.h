@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Eigen/Dense>
+
 #include "mpc_solver.h"
 
 namespace mpc {
@@ -26,6 +28,8 @@ class LongitudinalMPCSolver : public MPCSolver {
 
   void CompensateSlackWeights(std::vector<double> *weights);
 
+  void InitStateMatrices();
+
  protected:
   size_t num_of_state_;
   size_t num_of_control_;
@@ -34,6 +38,11 @@ class LongitudinalMPCSolver : public MPCSolver {
   double s_init_;
   double ds_init_;
   double prev_dds_;
+
+  std::vector<Eigen::MatrixXd> matrix_A_k_;
+  std::vector<Eigen::MatrixXd> matrix_B_k_;
+
+  Eigen::MatrixXd matrix_q_n_;
 
   std::vector<double> diag_matrix_q_;
   std::vector<double> diag_matrix_r_;

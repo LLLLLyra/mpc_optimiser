@@ -19,4 +19,7 @@ message LonMPCConfig {
   repeated double matrix_q = 4;
   repeated double matrix_r = 5;
   repeated double matrix_r_dot = 6;
+
+  required double dare_tol = 7;
+  required int32 dare_max_itr = 8;
 }

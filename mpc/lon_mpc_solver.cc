@@ -1,6 +1,7 @@
 #include "lon_mpc_solver.h"
 
 #include "glog/logging.h"
+#include "math_utils/dare.h"
 
 namespace mpc {
 LongitudinalMPCSolver::LongitudinalMPCSolver(const MPCConfig& config)
@@ -20,7 +21,10 @@ LongitudinalMPCSolver::LongitudinalMPCSolver(const MPCConfig& config)
   InitWeights(lon_mpc_config.matrix_r_dot(), num_of_control_,
               &diag_matrix_r_dot_);
 
-  // TODO: init (I + A_c Delta_t); B_c Delta_t
+  InitStateMatrices();
+  math_utils::Dare(matrix_A_k_.back(), matrix_B_k_.back(), diag_matrix_q_,
+                   diag_matrix_r_, lon_mpc_config.dare_tol(),
+                   lon_mpc_config.dare_max_itr(), &matrix_q_n_);
 }
 
 void LongitudinalMPCSolver::InitWeights(
@@ -43,6 +47,18 @@ void LongitudinalMPCSolver::CompensateSlackWeights(
   }
 
   CHECK(weights->size() == horizon_ + 1);
+}
+
+void LongitudinalMPCSolver::InitStateMatrices() {
+  Eigen::MatrixXd A_c(2, 2), B_c(2, 1);
+  A_c << 0, 1, 0, 0;
+  B_c << 0, 1;
+  for (size_t i = 0; i < horizon_; ++i) {
+    A_c = A_c * delta_t_ + Eigen::Matrix2d::Identity();
+    B_c *= delta_t_;
+    matrix_A_k_.emplace_back(A_c);
+    matrix_B_k_.emplace_back(B_c);
+  }
 }
 
 void LongitudinalMPCSolver::CalculateKernel(std::vector<OSQPFloat>* P_data,
@@ -69,7 +85,12 @@ void LongitudinalMPCSolver::CalculateKernel(std::vector<OSQPFloat>* P_data,
     }
   }
 
-  // TODO: Q_n
+  // Q_n
+  columns[index].emplace_back(index, matrix_q_n_(0, 0));
+  columns[index].emplace_back(index + 1, matrix_q_n_(1, 0));
+  index++;
+  columns[index].emplace_back(index, matrix_q_n_(1, 1));
+  columns[index].emplace_back(index - 1, matrix_q_n_(0, 1));
 
   // control
   const double dt_squared = delta_t_ * delta_t_;
@@ -135,10 +156,15 @@ void LongitudinalMPCSolver::CalculateOffset(std::vector<OSQPFloat>* q) {
     q->at(index++) = ds_ref_[i];
   }
 
-  // TODO Q_n;
+  Eigen::MatrixXd x_n_ref(2, 1);
+  x_n_ref << s_ref_.back(), ds_ref_.back();
+  auto q_n_ref = matrix_q_n_ * x_n_ref;
+  q->at(index++) = q_n_ref(0, 0);
+  q->at(index++) = q_n_ref(1, 0);
 
-  q->at(num_of_state_ * (horizon_ + 1)) =
-      -diag_matrix_r_dot_[0] * prev_dds_ / delta_t_ / delta_t_;
+  CHECK_EQ(index, num_of_state_ * (horizon_ + 1));
+
+  q->at(index) = -diag_matrix_r_dot_[0] * prev_dds_ / delta_t_ / delta_t_;
 }
 
 }  // namespace mpc
