@@ -25,7 +25,7 @@ void Dare(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B,
   uint num_iteration = 0;
   double diff = std::numeric_limits<double>::max();
   while (num_iteration++ < max_num_iteration && diff > tolerance) {
-    Matrix P_next =
+    Eigen::MatrixXd P_next =
         AT * P * A -
         (AT * P * B + M) * (R + BT * P * B).inverse() * (BT * P * A + MT) + Q;
     // check the difference between P and P_next
