@@ -75,7 +75,7 @@ void LongitudinalMPCSolver::CalculateKernel(std::vector<OSQPFloat>* P_data,
   const double dt_squared = delta_t_ * delta_t_;
   columns[num_of_state_ * (horizon_ + 1)].emplace_back(
       num_of_state_ * (horizon_ + 1),
-      diag_matrix_r_[0] + diag_matrix_r_dot_[0] / dt_squared);
+      diag_matrix_r_[0] + 2.0 * diag_matrix_r_dot_[0] / dt_squared);
   columns[num_of_state_ * (horizon_ + 1)].emplace_back(
       num_of_state_ * (horizon_ + 1) + 1, -diag_matrix_r_dot_[0] / dt_squared);
 

@@ -84,7 +84,7 @@ Q \\
 & \ddots\\
 & & Q \\
 & & & Q_N\\
-& & & & R + \frac{\dot R}{\Delta t^2} & -\frac{\dot R}{\Delta t^2}\\
+& & & & R + 2\frac{\dot R}{\Delta t^2} & -\frac{\dot R}{\Delta t^2}\\
 & & & & -\frac{\dot R}{\Delta t^2} & \ddots &  \ddots\\
 & & & & & \ddots & R + 2\frac{\dot R}{\Delta t^2} & -\frac{\dot R}{\Delta t^2}\\
 & & & & & &  -\frac{\dot R}{\Delta t^2} & R + \frac{\dot R}{\Delta t^2}\\
