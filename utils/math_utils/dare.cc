@@ -34,12 +34,12 @@ void Dare(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B,
   }
 
   if (num_iteration >= max_num_iteration) {
-    LOG(DEBUG) << "Dare cannot converge to a solution, "
-                  "last consecutive result diff is: "
-               << diff;
+    LOG(INFO) << "Dare cannot converge to a solution, "
+                 "last consecutive result diff is: "
+              << diff;
   } else {
-    LOG(DEBUG) << "Dare converged at iteration: " << num_iteration
-               << ", max consecutive result diff.: " << diff;
+    LOG(INFO) << "Dare converged at iteration: " << num_iteration
+              << ", max consecutive result diff.: " << diff;
   }
   *ptr_K = (R + BT * P * B).inverse() * (BT * P * A + MT);
 }
@@ -48,8 +48,8 @@ void Dare(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B,
           const std::vector<double> &diag_q, const std::vector<double> &diag_r,
           const double tolerance, const uint max_num_iteration,
           Eigen::MatrixXd *ptr_K) {
-  Eigen::MatrixXd Q = Eigen::MatrixXd(diag_q.data()).asDiagnal();
-  Eigen::MatrixXd R = Eigen::MatrixXd(diag_r.data()).asDiagnal();
+  Eigen::MatrixXd Q = Eigen::VectorXd(diag_q.data()).asDiagonal();
+  Eigen::MatrixXd R = Eigen::VectorXd(diag_r.data()).asDiagonal();
   Dare(A, B, Q, R, tolerance, max_num_iteration, ptr_K);
 }
 }  // namespace math_utils
