@@ -2,12 +2,25 @@
 
 #include <Eigen/Dense>
 
+#include "glog/logging.h"
 #include "mpc_solver.h"
+#include "utils/common_utils/macros.h"
 
 namespace mpc {
 class LongitudinalMPCSolver : public MPCSolver {
  public:
   LongitudinalMPCSolver(const MPCConfig &config);
+
+  PROP_SET(s_ref, std::vector<double>, s_ref_, this->horizon_ + 1);
+  PROP_SET(ds_ref, std::vector<double>, ds_ref_, this->horizon_ + 1);
+  PROP_SET(w_s_slack_l, std::vector<double>, diag_matrix_w_s_slack_l_,
+           this->horizon_ + 1);
+  PROP_SET(w_s_slack_u, std::vector<double>, diag_matrix_w_s_slack_u_,
+           this->horizon_ + 1);
+  PROP_SET(w_ds_slack_l, std::vector<double>, diag_matrix_w_ds_slack_l_,
+           this->horizon_ + 1);
+  PROP_SET(w_ds_slack_u, std::vector<double>, diag_matrix_w_ds_slack_u_,
+           this->horizon_ + 1);
 
  protected:
   void CalculateKernel(std::vector<OSQPFloat> *P_data,

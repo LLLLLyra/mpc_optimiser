@@ -1,7 +1,6 @@
 #include "lon_mpc_solver.h"
 
-#include "glog/logging.h"
-#include "math_utils/dare.h"
+#include "utils/math_utils/dare.h"
 
 namespace mpc {
 LongitudinalMPCSolver::LongitudinalMPCSolver(const MPCConfig& config)
