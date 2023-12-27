@@ -166,4 +166,11 @@ void LongitudinalMPCSolver::CalculateOffset(std::vector<OSQPFloat>* q) {
   q->at(index) = -diag_matrix_r_dot_[0] * prev_dds_ / delta_t_ / delta_t_;
 }
 
+void LongitudinalMPCSolver::CalculateAffineConstraint(
+    std::vector<OSQPFloat>* A_data, std::vector<OSQPInt>* A_indices,
+    std::vector<OSQPInt>* A_indptr, std::vector<OSQPFloat>* lower_bounds,
+    std::vector<OSQPFloat>* upper_bounds) {
+  // TODO: construct constraints
+}
+
 }  // namespace mpc
