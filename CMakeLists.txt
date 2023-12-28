@@ -33,7 +33,7 @@ foreach(FIL ${proto_files})
 endforeach()
 
 file(GLOB_RECURSE src_files ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
-file(GLOB_RECURSE header_files ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
+file(GLOB_RECURSE header_files ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 
 add_library(${PROJECT_NAME} SHARED ${src_files})
 target_link_libraries(
