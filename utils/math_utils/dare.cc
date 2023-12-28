@@ -48,8 +48,12 @@ void Dare(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B,
           const std::vector<double> &diag_q, const std::vector<double> &diag_r,
           const double tolerance, const uint max_num_iteration,
           Eigen::MatrixXd *ptr_K) {
-  Eigen::MatrixXd Q = Eigen::VectorXd(diag_q.data()).asDiagonal();
-  Eigen::MatrixXd R = Eigen::VectorXd(diag_r.data()).asDiagonal();
+  Eigen::MatrixXd Q = Eigen::Map<const Eigen::VectorXd, Eigen::Unaligned>(
+                          diag_q.data(), diag_q.size())
+                          .asDiagonal();
+  Eigen::MatrixXd R = Eigen::Map<const Eigen::VectorXd, Eigen::Unaligned>(
+                          diag_r.data(), diag_r.size())
+                          .asDiagonal();
   Dare(A, B, Q, R, tolerance, max_num_iteration, ptr_K);
 }
 }  // namespace math_utils
