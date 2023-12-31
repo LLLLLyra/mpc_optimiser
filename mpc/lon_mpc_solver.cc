@@ -294,7 +294,6 @@ void LongitudinalMPCSolver::CalculateAffineConstraint(
 
   // x_k+1 = Ak * x_k + Bk * u_k;
   for (int i = 2; i < num_of_state_ * (horizon_ + 1); i += num_of_state_) {
-    int index = i % num_of_state_;
     int k = i / num_of_state_;
     // s
     variables[i].emplace_back(constraint_index, -1.0);
