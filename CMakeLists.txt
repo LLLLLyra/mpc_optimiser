@@ -47,5 +47,6 @@ target_link_libraries(
 install(
     TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION lib
-    FILES ${header_files} DESTINATION include
 )
+
+install (FILES ${header_files} DESTINATION include)
