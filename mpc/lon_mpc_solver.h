@@ -8,19 +8,29 @@
 
 namespace mpc {
 class LongitudinalMPCSolver : public MPCSolver {
+  using Bounds = std::vector<std::pair<double, double>>;
+
  public:
   LongitudinalMPCSolver(const MPCConfig &config);
 
-  PROP_SET(s_ref, std::vector<double>, s_ref_, this->horizon_ + 1);
-  PROP_SET(ds_ref, std::vector<double>, ds_ref_, this->horizon_ + 1);
-  PROP_SET(w_s_slack_l, std::vector<double>, diag_matrix_w_s_slack_l_,
+  PROP_SET(s_ref, std::vector<double>, s_ref, this->horizon_ + 1);
+  PROP_SET(ds_ref, std::vector<double>, ds_ref, this->horizon_ + 1);
+  PROP_SET(w_s_slack_l, std::vector<double>, diag_matrix_w_s_slack_l,
            this->horizon_ + 1);
-  PROP_SET(w_s_slack_u, std::vector<double>, diag_matrix_w_s_slack_u_,
+  PROP_SET(w_s_slack_u, std::vector<double>, diag_matrix_w_s_slack_u,
            this->horizon_ + 1);
-  PROP_SET(w_ds_slack_l, std::vector<double>, diag_matrix_w_ds_slack_l_,
+  PROP_SET(w_ds_slack_l, std::vector<double>, diag_matrix_w_ds_slack_l,
            this->horizon_ + 1);
-  PROP_SET(w_ds_slack_u, std::vector<double>, diag_matrix_w_ds_slack_u_,
+  PROP_SET(w_ds_slack_u, std::vector<double>, diag_matrix_w_ds_slack_u,
            this->horizon_ + 1);
+
+  PROP_SET(s_slack_u, std::vector<double>, s_slack_u, this->horizon_ + 1);
+  PROP_SET(ds_slack_u, std::vector<double>, ds_slack_u, this->horizon_ + 1);
+
+  PROP_SET(x_bounds, Bounds, x_bounds, this->horizon_ + 1);
+  PROP_SET(dx_bounds, Bounds, x_bounds, this->horizon_ + 1);
+  PROP_SET(ddx_bounds, Bounds, x_bounds, this->horizon_);
+  PROP_SET(dddx_bounds, Bounds, x_bounds, this->horizon_);
 
  protected:
   void CalculateKernel(std::vector<OSQPFloat> *P_data,
@@ -52,8 +62,8 @@ class LongitudinalMPCSolver : public MPCSolver {
   double ds_init_;
   double prev_dds_;
 
-  std::vector<Eigen::MatrixXd> matrix_A_k_;
-  std::vector<Eigen::MatrixXd> matrix_B_k_;
+  Eigen::MatrixXd matrix_A_k_;
+  Eigen::MatrixXd matrix_B_k_;
 
   Eigen::MatrixXd matrix_q_n_;
 
@@ -64,6 +74,13 @@ class LongitudinalMPCSolver : public MPCSolver {
   std::vector<double> diag_matrix_w_s_slack_u_;
   std::vector<double> diag_matrix_w_ds_slack_l_;
   std::vector<double> diag_matrix_w_ds_slack_u_;
+
+  std::vector<double> s_slack_u_;
+  std::vector<double> ds_slack_u_;
+  Bounds x_bounds_;
+  Bounds dx_bounds_;
+  Bounds ddx_bounds_;
+  Bounds dddx_bounds_;
 
   std::vector<double> s_ref_;
   std::vector<double> ds_ref_;
