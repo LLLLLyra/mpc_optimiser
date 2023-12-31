@@ -171,145 +171,169 @@ void LongitudinalMPCSolver::CalculateAffineConstraint(
     std::vector<OSQPInt>* A_indptr, std::vector<OSQPFloat>* lower_bounds,
     std::vector<OSQPFloat>* upper_bounds) {
   // TODO: construct constraints
-const size_t kNumParam = num_of_state_ * (horizon_ + 1) +
-num_of_control_ * horizon_ + num_of_slack_var_ * (horizon_ + 1);
-const size_t kNumConstraints = kNumParam + num_of_state_ * (horizon_ + 1) + horizon_ + num_of_slack_var_ * (horizon_ + 1);
-lower_bounds->resize(kNumConstraints);
-upper_bounds->resize(kNumConstraints);
+  const size_t kNumParam = num_of_state_ * (horizon_ + 1) +
+                           num_of_control_ * horizon_ +
+                           num_of_slack_var_ * (horizon_ + 1);
+  const size_t kNumConstraints = kNumParam + num_of_state_ * (horizon_ + 1) +
+                                 horizon_ + num_of_slack_var_ * (horizon_ + 1);
+  lower_bounds->resize(kNumConstraints);
+  upper_bounds->resize(kNumConstraints);
 
-// TODO move to .h
-Eigen::MatrixXd INF(2, 1);
-INF << inf, inf;
-std::vector<Eigen::MatrixXd> matrix_x_l;
-std::vector<Eigen::MatrixXd> matrix_x_u;
-std::vector<double> diag_matrix_s_slack_l_;
-std::vector<double> diag_matrix_s_slack_u_;
-std::vector<double> diag_matrix_ds_slack_l_;
-std::vector<double> diag_matrix_ds_slack_u_;
-std::pair<double, double> ddx_bounds;
-std::pair<double, double> dddx_bounds;
+  // TODO move to .h
+  Eigen::MatrixXd INF(2, 1);
+  INF << inf, inf;
+  std::vector<Eigen::MatrixXd> matrix_x_l;
+  std::vector<Eigen::MatrixXd> matrix_x_u;
+  std::vector<double> diag_matrix_s_slack_l_;
+  std::vector<double> diag_matrix_s_slack_u_;
+  std::vector<double> diag_matrix_ds_slack_l_;
+  std::vector<double> diag_matrix_ds_slack_u_;
+  std::pair<double, double> ddx_bounds;
+  std::pair<double, double> dddx_bounds;
 
-std::vector<std::vector<std::pair<OSQPInt, OSQPFloat>>> variables(kNumParam);
+  std::vector<std::vector<std::pair<OSQPInt, OSQPFloat>>> variables(kNumParam);
 
-int constraint_index = 0;
-int slack_start_index = num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_;
-int slack_l_start_index = slack_start_index + 2 * (horizon_ + 1);
-for (size_t i = 0; i < kNumConstraints; ++i) {
+  int constraint_index = 0;
+  int slack_start_index =
+      num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_;
+  int slack_l_start_index = slack_start_index + 2 * (horizon_ + 1);
+  for (size_t i = 0; i < kNumConstraints; ++i) {
     // x [s, v]
     if (i < num_of_state_ * (horizon_ + 1)) {
-        int index = i % num_of_state_;
-        // x [s, v] + slack_x_l [s_slack_l, v_slack_l] + slack_x_u[s_slack_u, v_slack_u]
-        variables[i].emplace_back(constraint_index, 1.0);
-        variables[i + 1].emplace_back(constraint_index + 1, 1.0);
-        lower_bounds->at(constraint_index) = matrix_x_l[index];
-        upper_bounds->at(constraint_index) = matrix_x_u[index];
-        constraint_index += 2;
-        
-        // slack_u
-        if (diag_matrxi_w_s_slack_u_[i] != 0 || diag_matrxi_w_ds_slack_u_[i] != 0) {
-            variables[slack_start_index + i].emplace_back(constraint_index, -1.0);
-            variables[slack_start_index + i + 1].emplace_back(constraint_index + 1, -1.0)
-            lower_bounds->at(constraint_index) = -INF;
-            upper_bounds->at(constraint_index) = matrix_x_u[index];
-        }
-        constraint_index += 2;
+      int index = i % num_of_state_;
+      // x [s, v] + slack_x_l [s_slack_l, v_slack_l] + slack_x_u[s_slack_u,
+      // v_slack_u]
+      variables[i].emplace_back(constraint_index, 1.0);
+      variables[i + 1].emplace_back(constraint_index + 1, 1.0);
+      lower_bounds->at(constraint_index) = matrix_x_l[index];
+      upper_bounds->at(constraint_index) = matrix_x_u[index];
+      constraint_index += 2;
 
-        // slack_l
-        if (diag_matrxi_w_s_slack_l_[i] != 0 || diag_matrxi_w_ds_slack_l_[i] != 0) {
-            variables[slack_l_start_index + i].emplace_back(constraint_index, 1.0);
-            variables[slack_l_start_index + i + 1].emplace_back(constraint_index + 1, 1.0);
-            lower_bounds->at(constraint_index) = matrix_x_l[index];
-            upper_bounds->at(constraint_index) = INF;
-        }
-        ++constraint_index;
-    } else if (i < num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_) {
-        // a 
-        variables[num_of_state_ * (horizon_ + 1) + i].emplace_back(constraint_index, 1.0);
-        lower_bounds->at(constraint_index) = ddx_bounds[i - ].first;
-        upper_bounds->at(constraint_index) = ddx_bounds[i].second;
-    } else if (i < slack_start_index + (horizon_ + 1)){
-        // s_slack_u
-        variables[slack_start_index + i].emplace_back(constraint_index, 1.0);
-        lower_bounds->at(constraint_index) = 0.0;
-        upper_bounds->at(constraint_index) = diag_matrix_s_slack_u_[i - slack_start_index];
-    } else if (i < slack_start_index + 2.0 * (horizon_ + 1)) {
-        // ds_slack_u
-        variables[slack_start_index + (horizon_ + 1) + i].emplace_back(constraint_index, 1.0);
-        lower_bounds->at(constraint_index) = 0.0;
-        upper_bounds->at(constraint_index) = diag_matrix_ds_slack_u_[i - slack_start_index - (horizon_ + 1)];
-    } else if (i < slack_start_index + 3 * (horizon_ + 1)) {
-        // s_slack_l
+      // slack_u
+      if (diag_matrxi_w_s_slack_u_[i] != 0 ||
+          diag_matrxi_w_ds_slack_u_[i] != 0) {
+        variables[slack_start_index + i].emplace_back(constraint_index, -1.0);
+        variables[slack_start_index + i + 1]
+            .emplace_back(constraint_index + 1, -1.0)
+                lower_bounds->at(constraint_index) = -INF;
+        upper_bounds->at(constraint_index) = matrix_x_u[index];
+      }
+      constraint_index += 2;
+
+      // slack_l
+      if (diag_matrxi_w_s_slack_l_[i] != 0 ||
+          diag_matrxi_w_ds_slack_l_[i] != 0) {
         variables[slack_l_start_index + i].emplace_back(constraint_index, 1.0);
-        lower_bounds->at(constraint_index) = 0.0;
-        upper_bounds->at(constraint_index) = diag_matrix_s_slack_l_[i - slack_l_start_index].second;
+        variables[slack_l_start_index + i + 1].emplace_back(
+            constraint_index + 1, 1.0);
+        lower_bounds->at(constraint_index) = matrix_x_l[index];
+        upper_bounds->at(constraint_index) = INF;
+      }
+      ++constraint_index;
+    } else if (i <
+               num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_) {
+      // a
+      variables[num_of_state_ * (horizon_ + 1) + i].emplace_back(
+          constraint_index, 1.0);
+      lower_bounds->at(constraint_index) = ddx_bounds[i - ].first;
+      upper_bounds->at(constraint_index) = ddx_bounds[i].second;
+    } else if (i < slack_start_index + (horizon_ + 1)) {
+      // s_slack_u
+      variables[slack_start_index + i].emplace_back(constraint_index, 1.0);
+      lower_bounds->at(constraint_index) = 0.0;
+      upper_bounds->at(constraint_index) =
+          diag_matrix_s_slack_u_[i - slack_start_index];
+    } else if (i < slack_start_index + 2.0 * (horizon_ + 1)) {
+      // ds_slack_u
+      variables[slack_start_index + (horizon_ + 1) + i].emplace_back(
+          constraint_index, 1.0);
+      lower_bounds->at(constraint_index) = 0.0;
+      upper_bounds->at(constraint_index) =
+          diag_matrix_ds_slack_u_[i - slack_start_index - (horizon_ + 1)];
+    } else if (i < slack_start_index + 3 * (horizon_ + 1)) {
+      // s_slack_l
+      variables[slack_l_start_index + i].emplace_back(constraint_index, 1.0);
+      lower_bounds->at(constraint_index) = 0.0;
+      upper_bounds->at(constraint_index) =
+          diag_matrix_s_slack_l_[i - slack_l_start_index].second;
     } else {
-        // ds_slack_l
-        variables[slack_l_start_index + (horizon_ + 1) + i].emplace_back(constraint_index, 1.0);
-        lower_bounds->at(constraint_index) = 0.0;
-        upper_bounds->at(constraint_index) = diag_matrix_ds_slack_l_[i - slack_l_start_index - (horizon_ + 1)].second;
+      // ds_slack_l
+      variables[slack_l_start_index + (horizon_ + 1) + i].emplace_back(
+          constraint_index, 1.0);
+      lower_bounds->at(constraint_index) = 0.0;
+      upper_bounds->at(constraint_index) =
+          diag_matrix_ds_slack_l_[i - slack_l_start_index - (horizon_ + 1)]
+              .second;
     }
     ++constraint_index;
-}
+  }
 
-// x_k+1 = Ac * x_k + Bc * u_k;
-Eigen::MatrixXd I(2,2);
-I << 1, 0, 0, 1;
-Eigen::MatrixXd X_0(2, 1), Zero(2, 1);
-X_0 << s_init_, ds_init_;
-Zero << 0, 0;
-for (int i = 0; i < horizon_; ++i) {
+  // x_k+1 = Ac * x_k + Bc * u_k;
+  Eigen::MatrixXd I(2, 2);
+  I << 1, 0, 0, 1;
+  Eigen::MatrixXd X_0(2, 1), Zero(2, 1);
+  X_0 << s_init_, ds_init_;
+  Zero << 0, 0;
+  for (int i = 0; i < horizon_; ++i) {
     variables[i].emplace_back(constraint_index, -I);
     variables[i].emplace_back(constraint_index + 1, matrix_A_k[i]);
     variables[horizon_ + 1 + i].emplace_back(constraint_index, 0);
-    variables[horizon_ + 1 + i].emplace_back(constraint_index + 1, matrix_B_k[i]);
+    variables[horizon_ + 1 + i].emplace_back(constraint_index + 1,
+                                             matrix_B_k[i]);
 
     if (i == 0) {
-        lower_bounds->at(constraint_index) = -X_0;
-        upper_bounds->at(constraint_index) = -X_0;
+      lower_bounds->at(constraint_index) = -X_0;
+      upper_bounds->at(constraint_index) = -X_0;
     } else {
-        lower_bounds->at(constraint_index) = Zero;
-        upper_bounds->at(constraint_index) = Zero;
+      lower_bounds->at(constraint_index) = Zero;
+      upper_bounds->at(constraint_index) = Zero;
     }
     constraint_index += 2;
-}
+  }
 
-variables[horizon_].emplace_back(constraint_index, -I);
-variables[num_of_state_ * (horizon_ + 1) + horizon_].emplace_back(constraint_index, Zero);
-lower_bounds->at(constraint_index) = Zero;
-upper_bounds->at(constraint_index) = Zero;
-constraint_index += 2;
+  variables[horizon_].emplace_back(constraint_index, -I);
+  variables[num_of_state_ * (horizon_ + 1) + horizon_].emplace_back(
+      constraint_index, Zero);
+  lower_bounds->at(constraint_index) = Zero;
+  upper_bounds->at(constraint_index) = Zero;
+  constraint_index += 2;
 
-// u_dot_k = (u_k - u_k-1) / delta_t
-for (int i = 0; i < horizon_; ++i) {
+  // u_dot_k = (u_k - u_k-1) / delta_t
+  for (int i = 0; i < horizon_; ++i) {
     if (i == horizon_ - 1) {
-        variables[num_of_state_ * (horizon_ + 1) + i].emplace_back(constraint_index, 1.0);
+      variables[num_of_state_ * (horizon_ + 1) + i].emplace_back(
+          constraint_index, 1.0);
     } else {
-        variables[num_of_state_ * (horizon_ + 1) + i].emplace_back(constraint_index, 1.0);
-        variables[num_of_state_ * (horizon_ + 1) + i + 1].emplace_back(constraint_index, -1.0);
+      variables[num_of_state_ * (horizon_ + 1) + i].emplace_back(
+          constraint_index, 1.0);
+      variables[num_of_state_ * (horizon_ + 1) + i + 1].emplace_back(
+          constraint_index, -1.0);
     }
 
     if (i == 0) {
-        lower_bounds->at(constraint_index) = prev_dds_ + dddx_bounds[i].first * delta_t;
-        upper_bounds->at(constraint_index) = prev_dds_ + dddx_bounds[i].second * delta_t;
+      lower_bounds->at(constraint_index) =
+          prev_dds_ + dddx_bounds[i].first * delta_t;
+      upper_bounds->at(constraint_index) =
+          prev_dds_ + dddx_bounds[i].second * delta_t;
     } else {
-        lower_bounds->at(constraint_index) = dddx_bounds[i].first * delta_t;
-        upper_bounds->at(constraint_index) = dddx_bounds[i].second * delta_t;
+      lower_bounds->at(constraint_index) = dddx_bounds[i].first * delta_t;
+      upper_bounds->at(constraint_index) = dddx_bounds[i].second * delta_t;
     }
     ++constraint_index;
-}
+  }
 
-int ind_p = 0;
-  for (int i = 0; i< kNumParam; ++i) {
+  int ind_p = 0;
+  for (int i = 0; i < kNumParam; ++i) {
     A_indptr->push_back(ind_p);
     for (const auto& variable_nz : variables[i]) {
-        // coefficient
-        A_data->push_back(variable_nz.second);
-        // constraint index
-        A_indices->push_back(variable_nz.first);
-        ++ind_p;
+      // coefficient
+      A_data->push_back(variable_nz.second);
+      // constraint index
+      A_indices->push_back(variable_nz.first);
+      ++ind_p;
     }
-}
-A_indptr->push_back(ind_p);
+  }
+  A_indptr->push_back(ind_p);
 }
 
 }  // namespace mpc
