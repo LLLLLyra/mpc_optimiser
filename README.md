@@ -144,9 +144,9 @@ $$
 A_{eq} = \left[
 \begin{matrix}
 -I & & & & 0 \\
-I + A_c \Delta t & -I & & & B_c + \Delta t \\
+I + A_c \Delta t & -I & & & B_c  \Delta t \\
 & \ddots & \ddots & & & \ddots & \ddots\\
-& & I + A_c \Delta t & -I & & & B_c + \Delta t & 0
+& & I + A_c \Delta t & -I & & & B_c  \Delta t & 0
 \end{matrix}
 \right]
 $$
