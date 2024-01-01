@@ -69,6 +69,8 @@ class MPCSolver {
   size_t horizon_;
   double delta_t_;
 
+  size_t num_of_var_;
+
   std::vector<double> solution_;
 };
 }  // namespace mpc

@@ -28,9 +28,9 @@ class LongitudinalMPCSolver : public MPCSolver {
   PROP_SET(ds_slack_u, std::vector<double>, ds_slack_u, this->horizon_ + 1);
 
   PROP_SET(x_bounds, Bounds, x_bounds, this->horizon_ + 1);
-  PROP_SET(dx_bounds, Bounds, x_bounds, this->horizon_ + 1);
-  PROP_SET(ddx_bounds, Bounds, x_bounds, this->horizon_);
-  PROP_SET(dddx_bounds, Bounds, x_bounds, this->horizon_);
+  PROP_SET(dx_bounds, Bounds, dx_bounds, this->horizon_ + 1);
+  PROP_SET(ddx_bounds, Bounds, ddx_bounds, this->horizon_);
+  PROP_SET(dddx_bounds, Bounds, dddx_bounds, this->horizon_);
 
  protected:
   void CalculateKernel(std::vector<OSQPFloat> *P_data,

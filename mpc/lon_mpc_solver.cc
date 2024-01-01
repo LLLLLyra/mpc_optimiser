@@ -15,6 +15,9 @@ LongitudinalMPCSolver::LongitudinalMPCSolver(const MPCConfig& config)
   ds_init_ = lon_mpc_config.ds_init();
   prev_dds_ = lon_mpc_config.prev_dds();
 
+  num_of_var_ = num_of_state_ * (horizon_ + 1) + num_of_state_ * horizon_ +
+                num_of_slack_var_ * (horizon_ + 1);
+
   InitWeights(lon_mpc_config.matrix_q(), num_of_state_, &diag_matrix_q_);
   InitWeights(lon_mpc_config.matrix_r(), num_of_control_, &diag_matrix_r_);
   InitWeights(lon_mpc_config.matrix_r_dot(), num_of_control_,
@@ -177,6 +180,16 @@ void LongitudinalMPCSolver::CalculateAffineConstraint(
   lower_bounds->resize(kNumConstraints);
   upper_bounds->resize(kNumConstraints);
 
+  if (s_slack_u_.empty()) {
+    s_slack_u_.resize(horizon_ + 1);
+    std::fill_n(s_slack_u_.begin(), horizon_ + 1, OSQP_INFTY);
+  }
+
+  if (ds_slack_u_.empty()) {
+    ds_slack_u_.resize(horizon_ + 1);
+    std::fill_n(ds_slack_u_.begin(), horizon_ + 1, OSQP_INFTY);
+  }
+
   std::vector<std::vector<std::pair<OSQPInt, OSQPFloat>>> variables(kNumParam);
 
   int constraint_index = 0;
@@ -254,6 +267,8 @@ void LongitudinalMPCSolver::CalculateAffineConstraint(
       lower_bounds->at(constraint_index) = 0.0;
       upper_bounds->at(constraint_index) =
           ds_slack_u_[i - slack_start_index - (horizon_ + 1)];
+    } else {
+      break;
     }
     ++constraint_index;
     ++i;

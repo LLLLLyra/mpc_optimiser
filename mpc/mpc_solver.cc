@@ -70,10 +70,8 @@ OSQPData* MPCSolver::FormulateProblem() {
   CHECK_EQ(lower_bounds.size(), upper_bounds.size());
 
   CHECK_GT(P_indptr.back(), 0);
-  size_t num_of_var = P_indptr.back() - 1;
-  CHECK(num_of_var % horizon_ == 0);
 
-  size_t kernel_dim = num_of_var;
+  size_t kernel_dim = num_of_var_;
   size_t num_affine_constraint = lower_bounds.size();
 
   data->n = kernel_dim;
