@@ -67,9 +67,9 @@ OSQPData* MPCSolver::FormulateProblem() {
   CalculateOffset(&q);
 
   OSQPData* data = reinterpret_cast<OSQPData*>(malloc(sizeof(OSQPData)));
+  data->P = reinterpret_cast<OSQPCscMatrix*>(malloc(sizeof(OSQPCscMatrix)));
+  data->A = reinterpret_cast<OSQPCscMatrix*>(malloc(sizeof(OSQPCscMatrix)));
   CHECK_EQ(lower_bounds.size(), upper_bounds.size());
-
-  CHECK_GT(P_indptr.back(), 0);
 
   size_t kernel_dim = num_of_var_;
   size_t num_affine_constraint = lower_bounds.size();
