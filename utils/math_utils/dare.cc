@@ -41,7 +41,7 @@ void Dare(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B,
     LOG(INFO) << "Dare converged at iteration: " << num_iteration
               << ", max consecutive result diff.: " << diff;
   }
-  *ptr_K = (R + BT * P * B).inverse() * (BT * P * A + MT);
+  *ptr_K = P;
 }
 
 void Dare(const Eigen::MatrixXd &A, const Eigen::MatrixXd &B,
