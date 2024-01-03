@@ -15,8 +15,12 @@ bool MPCSolver::Solve(int max_iter) {
   settings->max_iter = max_iter;
 
   OSQPSolver* osqp_solver = nullptr;
-  osqp_setup(&osqp_solver, data->P, data->q, data->A, data->l, data->u, data->m,
-             data->n, settings);
+  OSQPInt exit_flags = osqp_setup(&osqp_solver, data->P, data->q, data->A,
+                                  data->l, data->u, data->m, data->n, settings);
+
+  if (exit_flags) {
+    return false;
+  }
 
   osqp_solve(osqp_solver);
 
@@ -112,7 +116,7 @@ OSQPSettings* MPCSolver::Settings() {
   } else {
     osqp_set_default_settings(settings);
     settings->scaled_termination = true;
-    settings->verbose = false;
+    settings->verbose = true;
     settings->max_iter = config_.max_iter();
     settings->eps_abs = config_.eps();
     return settings;
