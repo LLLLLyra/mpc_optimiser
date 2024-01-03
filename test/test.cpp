@@ -7,6 +7,7 @@ double RUnif(double mn, double mx) {
   std::ranlux48 engine(seed());
   std::uniform_int_distribution<> distrib(mn, mx);
   int random = distrib(engine);
+  return random;
 }
 
 int main() {
