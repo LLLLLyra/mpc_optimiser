@@ -85,10 +85,9 @@ void LongitudinalMPCSolver::CalculateKernel(std::vector<OSQPFloat>* P_data,
 
   // Q_n
   columns[index].emplace_back(index, matrix_q_n_(0, 0));
-  // columns[index].emplace_back(index + 1, matrix_q_n_(1, 0));
   index++;
-  columns[index].emplace_back(index, matrix_q_n_(1, 1));
   columns[index].emplace_back(index - 1, matrix_q_n_(0, 1));
+  columns[index].emplace_back(index, matrix_q_n_(1, 1));
 
   CHECK_EQ(++index, num_of_state_ * (horizon_ + 1));
 
@@ -97,30 +96,25 @@ void LongitudinalMPCSolver::CalculateKernel(std::vector<OSQPFloat>* P_data,
   columns[num_of_state_ * (horizon_ + 1)].emplace_back(
       num_of_state_ * (horizon_ + 1),
       diag_matrix_r_[0] + 2.0 * diag_matrix_r_dot_[0] / dt_squared);
-  // columns[num_of_state_ * (horizon_ + 1)].emplace_back(
-  //     num_of_state_ * (horizon_ + 1) + 1, -diag_matrix_r_dot_[0] /
-  //     dt_squared);
 
   for (size_t i = 1; i + 1 < horizon_; ++i) {
     columns[i + num_of_state_ * (horizon_ + 1)].emplace_back(
-        i + num_of_state_ * (horizon_ + 1),
-        diag_matrix_r_[0] + 2.0 * diag_matrix_r_dot_[0] / dt_squared);
-    columns[i + num_of_state_ * (horizon_ + 1)].emplace_back(
         i + num_of_state_ * (horizon_ + 1) - 1,
         -diag_matrix_r_dot_[0] / dt_squared);
-    // columns[i + num_of_state_ * (horizon_ + 1)].emplace_back(
-    //     i + num_of_state_ * (horizon_ + 1) + 1,
-    //     -diag_matrix_r_dot_[0] / dt_squared);
+    columns[i + num_of_state_ * (horizon_ + 1)].emplace_back(
+        i + num_of_state_ * (horizon_ + 1),
+        diag_matrix_r_[0] + 2.0 * diag_matrix_r_dot_[0] / dt_squared);
   }
+
+  columns[num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_ - 1]
+      .emplace_back(
+          num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_ - 2,
+          -diag_matrix_r_dot_[0] / dt_squared);
 
   columns[num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_ - 1]
       .emplace_back(
           num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_ - 1,
           diag_matrix_r_[0] + diag_matrix_r_dot_[0] / dt_squared);
-  columns[num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_ - 1]
-      .emplace_back(
-          num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_ - 2,
-          -diag_matrix_r_dot_[0] / dt_squared);
 
   // slack var
   index = num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_;
