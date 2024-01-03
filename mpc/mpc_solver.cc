@@ -66,9 +66,9 @@ OSQPData* MPCSolver::FormulateProblem() {
   std::vector<OSQPFloat> q;
   CalculateOffset(&q);
 
-  OSQPData* data = reinterpret_cast<OSQPData*>(malloc(sizeof(OSQPData)));
-  data->P = reinterpret_cast<OSQPCscMatrix*>(malloc(sizeof(OSQPCscMatrix)));
-  data->A = reinterpret_cast<OSQPCscMatrix*>(malloc(sizeof(OSQPCscMatrix)));
+  OSQPData* data = new OSQPData;
+  data->A = new OSQPCscMatrix;
+  data->P = new OSQPCscMatrix;
   CHECK_EQ(lower_bounds.size(), upper_bounds.size());
 
   size_t kernel_dim = num_of_var_;
@@ -99,9 +99,9 @@ void MPCSolver::FreeData(OSQPData* data) {
   delete[] data->A->p;
   delete[] data->A->x;
 
-  free(data->A);
-  free(data->P);
-  free(data);
+  delete data->A;
+  delete data->P;
+  delete data;
 }
 
 OSQPSettings* MPCSolver::Settings() {
