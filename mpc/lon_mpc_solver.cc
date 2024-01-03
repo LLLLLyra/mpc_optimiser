@@ -333,6 +333,15 @@ void LongitudinalMPCSolver::CalculateAffineConstraint(
 void LongitudinalMPCSolver::ExtractSolution(OSQPSolution* osqp_solution,
                                             OSQPInt num_of_var) {
   MPCSolver::ExtractSolution(osqp_solution, num_of_var);
+
+  std::vector<double>().swap(opt_s_);
+  std::vector<double>().swap(opt_v_);
+  std::vector<double>().swap(opt_a_);
+
+  opt_s_.reserve(horizon_ + 1);
+  opt_v_.reserve(horizon_ + 1);
+  opt_a_.reserve(horizon_);
+
   for (size_t i = 0; i < horizon_ + 1; ++i) {
     opt_s_.emplace_back(solution_[i]);
   }
