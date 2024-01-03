@@ -15,7 +15,7 @@ LongitudinalMPCSolver::LongitudinalMPCSolver(const MPCConfig& config)
   ds_init_ = lon_mpc_config.ds_init();
   prev_dds_ = lon_mpc_config.prev_dds();
 
-  num_of_var_ = num_of_state_ * (horizon_ + 1) + num_of_state_ * horizon_ +
+  num_of_var_ = num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_ +
                 num_of_slack_var_ * (horizon_ + 1);
 
   InitWeights(lon_mpc_config.matrix_q(), num_of_state_, &diag_matrix_q_);
