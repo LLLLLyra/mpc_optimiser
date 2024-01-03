@@ -32,6 +32,10 @@ class LongitudinalMPCSolver : public MPCSolver {
   PROP_SET(ddx_bounds, Bounds, ddx_bounds, this->horizon_);
   PROP_SET(dddx_bounds, Bounds, dddx_bounds, this->horizon_);
 
+  const std::vector<double> &opt_x() { return opt_s_; }
+  const std::vector<double> &opt_dx() { return opt_v_; }
+  const std::vector<double> &opt_ddx() { return opt_a_; }
+
  protected:
   void CalculateKernel(std::vector<OSQPFloat> *P_data,
                        std::vector<OSQPInt> *P_indices,
@@ -52,6 +56,9 @@ class LongitudinalMPCSolver : public MPCSolver {
   void CompensateSlackWeights(std::vector<double> *weights);
 
   void InitStateMatrices();
+
+  void ExtractSolution(OSQPSolution *osqp_solution,
+                       OSQPInt num_of_var) override;
 
  protected:
   size_t num_of_state_;
@@ -84,5 +91,9 @@ class LongitudinalMPCSolver : public MPCSolver {
 
   std::vector<double> s_ref_;
   std::vector<double> ds_ref_;
+
+  std::vector<double> opt_s_;
+  std::vector<double> opt_v_;
+  std::vector<double> opt_a_;
 };
 }  // namespace mpc

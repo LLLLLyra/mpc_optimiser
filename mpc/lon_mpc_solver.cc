@@ -330,4 +330,19 @@ void LongitudinalMPCSolver::CalculateAffineConstraint(
   CSCInitHelper(variables, A_data, A_indices, A_indptr);
 }
 
+void LongitudinalMPCSolver::ExtractSolution(OSQPSolution* osqp_solution,
+                                            OSQPInt num_of_var) {
+  MPCSolver::ExtractSolution(osqp_solution, num_of_var);
+  for (size_t i = 0; i < horizon_ + 1; ++i) {
+    opt_s_.emplace_back(solution_[i]);
+  }
+  for (size_t i = horizon_ + 1; i < 2 * (horizon_ + 1); ++i) {
+    opt_v_.emplace_back(solution_[i]);
+  }
+  for (size_t i = num_of_state_ * (horizon_ + 1);
+       i < num_of_state_ * (horizon_ + 1) + horizon_; ++i) {
+    opt_a_.emplace_back(solution_[i]);
+  }
+}
+
 }  // namespace mpc

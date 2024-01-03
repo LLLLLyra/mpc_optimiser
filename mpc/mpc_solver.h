@@ -38,7 +38,7 @@ class MPCSolver {
   OSQPSettings *Settings();
   OSQPData *FormulateProblem();
   void FreeData(OSQPData *data);
-  void ExtractSolution(OSQPSolution *osqp_solution, OSQPInt num_of_var);
+  virtual void ExtractSolution(OSQPSolution *osqp_solution, OSQPInt num_of_var);
 
   template <typename T>
   T *CopyData(const std::vector<T> &vec) {
