@@ -43,6 +43,20 @@ target_link_libraries(
     glog::glog 
     osqp::osqp
 )
+if (BUILD_TESTING)
+add_executable(
+        ${PROJECT_NAME}_test
+        test/test.cpp
+        ${src_files}
+)
+target_link_libraries(
+    ${PROJECT_NAME}_test 
+    ${GLOG_LIBRARIES} 
+    ${PROTOBUF_LIBRARIES} 
+    glog::glog 
+    osqp::osqp
+)
+endif()
 
 install(
     TARGETS ${PROJECT_NAME}
