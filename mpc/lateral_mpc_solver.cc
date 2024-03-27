@@ -104,12 +104,12 @@ void LateralMPCSolver::InitStateMatrices(int k, Eigen::MatrixXd* matrix_A_k,
   *matrix_B_k = (2.0 * Eigen::MatrixXd::Identity(num_of_state_, num_of_state_) -
                  Ac * delta_t_)
                     .inverse() *
-                Bc;
+                Bc * delta_t_;
   *matrix_B_tilde =
       (2.0 * Eigen::MatrixXd::Identity(num_of_state_, num_of_state_) -
        Ac * delta_t_)
           .inverse() *
-      Bc_tidle;
+      Bc_tidle * delta_t_;
 }
 
 void LateralMPCSolver::CalculateKernel(std::vector<OSQPFloat>* P_data,
@@ -510,8 +510,12 @@ void LateralMPCSolver::CalculateAffineConstraint(
       variables[k + num_of_state_ * (horizon_ + 1)].emplace_back(
           constraint_index + row, matrix_B_k(row, 0));
 
-      lower_bounds->at(constraint_index + row) = -matrix_B_tilde_k(row, 0);
-      upper_bounds->at(constraint_index + row) = -matrix_B_tilde_k(row, 0);
+      lower_bounds->at(constraint_index + row) =
+          -matrix_B_tilde_k(row, 0) * lateral_mpc_config_.kappa(k) *
+          lateral_mpc_config_.velocity(k);
+      upper_bounds->at(constraint_index + row) =
+          -matrix_B_tilde_k(row, 0) * lateral_mpc_config_.kappa(k) *
+          lateral_mpc_config_.velocity(k);
     }
 
     constraint_index += num_of_state_;

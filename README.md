@@ -276,7 +276,7 @@ $$
 \begin{aligned}
 x_{t + 1}  &= \left(I + A_cx_tdt\right) + B_cu_tdt + \tilde{B}_c\tilde{u}_tdt \\
 &= \left(I + A_cdt\right)\frac{x_{t+1} + x_t}{2} + B_cu_tdt + \tilde{B}_c\tilde{u}_tdt \\
-&= \left(2I - A_c dt\right)^{-1}\left(2I+ A_c dt\right)x_t + \left(2I - A_c dt\right)^{-1}B_c u_t + \left(2I - A_c dt\right)^{-1}\tilde{B}_c\tilde{u}_t
+&= \left(2I - A_c dt\right)^{-1}\left(2I+ A_c dt\right)x_t + \left(2I - A_c dt\right)^{-1}B_c u_t dt + \left(2I - A_c dt\right)^{-1}\tilde{B}_c\tilde{u}_t dt
 \end{aligned}
 $$
 
