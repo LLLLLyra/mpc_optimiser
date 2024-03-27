@@ -9,6 +9,7 @@ message MPCConfig {
   required double delta_t = 4;
 
   optional LonMPCConfig lon_mpc_config = 5;
+  optional LateralMPCConfig lat_mpc_config = 6;
 };
 
 message LonMPCConfig {
@@ -22,4 +23,29 @@ message LonMPCConfig {
 
   required double dare_tol = 7;
   required int32 dare_max_itr = 8;
+}
+
+message LateralMPCConfig {
+  required double l_init = 1;
+  required double l_dot_init = 2;
+  required double psi_init = 3;
+  required double psi_dot_init = 4;
+  required double prev_delta = 5;
+
+  required double C_af = 6;
+  required double C_ar = 7;
+  required double l_f = 8;
+  required double l_r = 9;
+  required double I_z = 10;
+  required double m = 11;
+
+  repeated double matrix_q = 12;
+  repeated double matrix_r = 13;
+  repeated double matrix_r_dot = 14;
+
+  required double dare_tol = 15;
+  required int32 dare_max_itr = 16;
+
+  repeated double velocity = 17;
+  repeated double kappa =18;
 }

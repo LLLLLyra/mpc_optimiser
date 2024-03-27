@@ -1,6 +1,6 @@
-# Longitudinal MPC
+# MPC for Planning
 
-This repository implement speed planning via MPC.
+This repository implement planning via MPC.
 
 # Basic MPC
 
@@ -52,7 +52,7 @@ where, specifically, in this equation,
 - $u_k$ represents $\ddot{s}_k$;
 - $\sigma_k$ represents slack variables.
 
-# To a Quadratic Problem
+## To a Quadratic Problem
 
 We have a standard QP formulation as below.
 
@@ -60,7 +60,7 @@ $$J = \min_z \frac{1}{2}z^T P z + q^T z \\
 s.t. \\
 z_{min} \leq Az \leq z_{max}$$
 
-## Cost
+### Cost
 
 First of all, $\dot{u}_k$ could be written as 
 $$\dot{u}_k = \frac{u_k - u_{k-1}}{\Delta t}$$
@@ -101,9 +101,9 @@ $$q = \left[\begin{matrix}
 \end{matrix}
 \right]^T$$
 
-## Constraints
+### Constraints
 
-### Equality Constraints
+#### Equality Constraints
 
 We consider an error differential equation
 $$\dot x(t) = A_c x(t) +B_c u(t)$$
@@ -162,7 +162,7 @@ b_{eq} = \left[
 \right]
 $$
 
-### Inequality Constraints
+####ß Inequality Constraints
 
 Generally, maximum ranges of acceleration and jerk of the ego vehicle constrain a speed planning problem. Slack variables are often applied to relax station and velocity constraints. In this section, we only support to relax $s_k$ and $\dot s_k$ with slack variables, denoting as $\sigma_{x,k}$ for upper bounds and $\mu_{x, k}$ for lower bounds.
 
@@ -231,3 +231,68 @@ j_{min}\Delta t
 $$
 
 Please Note that we do **NOT** support to constrain lower slack variables $\mu_{x, k}$ of $x_k$.
+
+# Lateral MPC
+
+Similar to Longitudinal MPC, we start Lateral MPC with its state transition equation. With vehicle dynamics, we have
+
+$$
+\dot{x}(t) = A_cx(t) + B_cu(t) + \tilde{B}_c\tilde{u}(t)
+$$
+
+where 
+$$\begin{aligned}
+x(0) &= x_{init} \\
+A_c &= \left[
+\begin{matrix}
+0 & 1 & 0 & 0 \\
+0 & -\frac{C_{\alpha f} + C_{\alpha r}}{mv_t} & \frac{C_{\alpha f} + C_{\alpha r}}{m} & \frac{-C_{\alpha f}l_f + C_{\alpha r}l_r}{mv_t} \\
+0 & 0 & 0 & 1 \\
+0 & -\frac{C_{\alpha f}l_f - C_{\alpha r}l_r}{I_zv_t} & \frac{C_{\alpha f}l_f - C_{\alpha r}l_r}{I_z} & -\frac{C_{\alpha f}l_f^2 + C_{\alpha r}l_r^2}{I_zv_t}
+\end{matrix}
+\right] \\
+B_c &= \left[
+\begin{matrix}
+0 \\
+\frac{C_{\alpha f}}{m} \\
+0 \\
+\frac{C_{\alpha f}l_f}{I_z}
+\end{matrix}
+\right] \\
+\tilde{B}_c &= \left[
+\begin{matrix}
+0 \\
+-\frac{C_{\alpha f}l_f - C_{\alpha r}l_r}{mv_t} - v_t \\
+0 \\
+-\frac{C_{\alpha f}l_f^2 - C_{\alpha r}l_r^2}{I_zv_t}
+\end{matrix}
+\right]
+\end{aligned} 
+$$
+
+To discretise the problem, two-step Euler method is applied on $x_t$ while forward Euler method on $u_t$. Then we have,
+
+$$
+\begin{aligned}
+x_{t + 1}  &= \left(I + A_cx_tdt\right) + B_cu_tdt + \tilde{B}_c\tilde{u}_tdt \\
+&= \left(I + A_cdt\right)\frac{x_{t+1} + x_t}{2} + B_cu_tdt + \tilde{B}_c\tilde{u}_tdt \\
+&= \left(2I - A_c dt\right)^{-1}\left(2I+ A_c dt\right)x_t + \left(2I - A_c dt\right)^{-1}B_c u_t + \left(2I - A_c dt\right)^{-1}\tilde{B}_c\tilde{u}_t
+\end{aligned}
+$$
+
+where 
+$$
+\begin{aligned}
+x_k &= \left[
+\begin{matrix}
+l_k \\
+\dot{l}_k \\
+\psi_{s, k} \\
+\dot \psi_{s, k}
+\end{matrix}
+\right] \\
+u_k &= \left[\delta_k\right] \\
+\dot u_k &= \frac{u_k - u_{k - 1}}{\Delta t}\\
+\tilde{u}_k &= \left[\kappa_{s, k}v_k\right]
+\end{aligned}
+$$
