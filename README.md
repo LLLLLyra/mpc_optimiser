@@ -1,6 +1,6 @@
 # MPC for Planning
 
-This repository implement planning via MPC.
+This repository provides an example of MPC optimiser for planning. One should be aware that this is just one of the implementations of solving an MPC problem, and there also remains some improvement. 
 
 # Basic MPC
 
