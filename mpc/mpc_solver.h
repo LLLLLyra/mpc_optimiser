@@ -3,7 +3,13 @@
 #include <algorithm>
 #include <vector>
 
+#if __has_include("osqp/osqp.h")
 #include "osqp/osqp.h"
+#elif __has_include("osqp.h")
+#include "osqp.h"
+#else
+#error "OSQP headers not found"
+#endif
 #include "proto/mpc_config.pb.h"
 
 namespace mpc {

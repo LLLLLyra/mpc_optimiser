@@ -36,6 +36,19 @@ class LateralMPCSolver : public MPCSolver {
   PROP_SET(w_psi_dot_slack_u, std::vector<double>,
            diag_matrix_w_psi_dot_slack_u, this->horizon_ + 1);
 
+  PROP_SET(l_slack_u, std::vector<double>, l_slack_u, this->horizon_ + 1);
+  PROP_SET(l_dot_slack_u, std::vector<double>, l_dot_slack_u,
+           this->horizon_ + 1);
+  PROP_SET(l_slack_l, std::vector<double>, l_slack_l, this->horizon_ + 1);
+  PROP_SET(l_dot_slack_l, std::vector<double>, l_dot_slack_l,
+           this->horizon_ + 1);
+  PROP_SET(psi_slack_u, std::vector<double>, psi_slack_u, this->horizon_ + 1);
+  PROP_SET(psi_dot_slack_u, std::vector<double>, psi_dot_slack_u,
+           this->horizon_ + 1);
+  PROP_SET(psi_slack_l, std::vector<double>, psi_slack_l, this->horizon_ + 1);
+  PROP_SET(psi_dot_slack_l, std::vector<double>, psi_dot_slack_l,
+           this->horizon_ + 1);
+
   PROP_SET(l_bounds, Bounds, l_bounds, this->horizon_ + 1);
   PROP_SET(l_dot_bounds, Bounds, l_dot_bounds, this->horizon_ + 1);
   PROP_SET(psi_bounds, Bounds, psi_bounds, this->horizon_ + 1);
@@ -43,6 +56,12 @@ class LateralMPCSolver : public MPCSolver {
 
   PROP_SET(delta_bounds, Bounds, delta_bounds, this->horizon_);
   PROP_SET(delta_dot_bounds, Bounds, delta_dot_bounds, this->horizon_);
+
+  const std::vector<double>& opt_l() { return opt_l_; }
+  const std::vector<double>& opt_l_dot() { return opt_l_dot_; }
+  const std::vector<double>& opt_psi() { return opt_psi_; }
+  const std::vector<double>& opt_psi_dot() { return opt_psi_dot_; }
+  const std::vector<double>& opt_delta() { return opt_delta_; }
 
  protected:
   void CalculateKernel(std::vector<OSQPFloat> *P_data,
