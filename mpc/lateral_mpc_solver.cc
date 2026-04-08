@@ -1,5 +1,7 @@
 #include "lateral_mpc_solver.h"
 
+#include <cmath>
+
 #include "utils/math_utils/dare.h"
 
 namespace mpc {
@@ -81,7 +83,11 @@ void LateralMPCSolver::InitStateMatrices(int k, Eigen::MatrixXd* matrix_A_k,
   double l_r = lateral_mpc_config_.l_r();
   double I_z = lateral_mpc_config_.i_z();
   double m = lateral_mpc_config_.m();
-  double v_k = lateral_mpc_config_.velocity(k);
+  const double raw_v_k = lateral_mpc_config_.velocity(k);
+  // Avoid singular dynamics when the speed profile gets very close to zero.
+  const double v_k = std::abs(raw_v_k) < 1e-3
+                         ? (raw_v_k < 0.0 ? -1e-3 : 1e-3)
+                         : raw_v_k;
 
   Ac << 0, 1, 0, 0,  // NOLINT
       0, -(C_af + C_ar) / (m * v_k), (C_af + C_ar) / m,
@@ -222,16 +228,16 @@ void LateralMPCSolver::CalculateOffset(std::vector<OSQPFloat>* q) {
   q->resize(kNumParam);
   int index = 0;
   for (size_t i = 0; i < horizon_; i++) {
-    q->at(index++) = l_ref_[i];
-    q->at(index++) = l_dot_ref_[i];
-    q->at(index++) = psi_ref_[i];
-    q->at(index++) = psi_dot_ref_[i];
+    q->at(index++) = -diag_matrix_q_[0] * l_ref_[i];
+    q->at(index++) = -diag_matrix_q_[1] * l_dot_ref_[i];
+    q->at(index++) = -diag_matrix_q_[2] * psi_ref_[i];
+    q->at(index++) = -diag_matrix_q_[3] * psi_dot_ref_[i];
   }
 
   Eigen::MatrixXd x_n_ref(num_of_state_, 1);
   x_n_ref << l_ref_.back(), l_dot_ref_.back(), psi_ref_.back(),
       psi_dot_ref_.back();
-  auto q_n_ref = matrix_q_n_ * x_n_ref;
+  auto q_n_ref = -matrix_q_n_ * x_n_ref;
   q->at(index++) = q_n_ref(0, 0);
   q->at(index++) = q_n_ref(1, 0);
   q->at(index++) = q_n_ref(2, 0);
@@ -283,7 +289,7 @@ void LateralMPCSolver::CalculateAffineConstraint(
   int slack_start_index =
       num_of_state_ * (horizon_ + 1) + num_of_control_ * horizon_;
   int slack_l_start_index =
-      slack_start_index + num_of_slack_var_ * (horizon_ + 1);
+      slack_start_index + 4 * (horizon_ + 1);
   for (size_t i = 0; i < kNumParam;) {
     // x
     if (i < num_of_state_ * (horizon_ + 1)) {
@@ -295,7 +301,8 @@ void LateralMPCSolver::CalculateAffineConstraint(
 
       // slack_l_u
       if (diag_matrix_w_l_slack_u_[index] != 0.0) {
-        variables[slack_start_index + i].emplace_back(constraint_index, -1.0);
+        variables[slack_start_index + index].emplace_back(constraint_index,
+                                                          -1.0);
       }
 
       // l_lower
@@ -305,8 +312,8 @@ void LateralMPCSolver::CalculateAffineConstraint(
 
       // slack_l_l
       if (diag_matrix_w_l_slack_l_[index] != 0.0) {
-        variables[slack_l_start_index + i].emplace_back(constraint_index + 1,
-                                                        1.0);
+        variables[slack_l_start_index + index].emplace_back(
+            constraint_index + 1, 1.0);
       }
 
       constraint_index += 2;
@@ -318,7 +325,7 @@ void LateralMPCSolver::CalculateAffineConstraint(
 
       // slack_dl_u
       if (diag_matrix_w_l_dot_slack_u_[index] != 0.0) {
-        variables[slack_start_index + i + (horizon_ + 1)].emplace_back(
+        variables[slack_start_index + index + (horizon_ + 1)].emplace_back(
             constraint_index, -1.0);
       }
 
@@ -329,7 +336,7 @@ void LateralMPCSolver::CalculateAffineConstraint(
 
       // slack_dl_l
       if (diag_matrix_w_l_dot_slack_l_[index] != 0.0) {
-        variables[slack_l_start_index + i + (horizon_ + 1)].emplace_back(
+        variables[slack_l_start_index + index + (horizon_ + 1)].emplace_back(
             constraint_index + 1, 1.0);
       }
 
@@ -342,8 +349,8 @@ void LateralMPCSolver::CalculateAffineConstraint(
 
       // slack_l_u
       if (diag_matrix_w_psi_slack_u_[index] != 0.0) {
-        variables[slack_start_index + i + (horizon_ + 1) * 2].emplace_back(
-            constraint_index, -1.0);
+        variables[slack_start_index + index + (horizon_ + 1) * 2]
+            .emplace_back(constraint_index, -1.0);
       }
 
       // psi_lower
@@ -353,8 +360,8 @@ void LateralMPCSolver::CalculateAffineConstraint(
 
       // slack_psi_l
       if (diag_matrix_w_psi_slack_l_[index] != 0.0) {
-        variables[slack_l_start_index + i + (horizon_ + 1) * 2].emplace_back(
-            constraint_index + 1, 1.0);
+        variables[slack_l_start_index + index + (horizon_ + 1) * 2]
+            .emplace_back(constraint_index + 1, 1.0);
       }
 
       constraint_index += 2;
@@ -366,8 +373,8 @@ void LateralMPCSolver::CalculateAffineConstraint(
 
       // slack_dpsi_u
       if (diag_matrix_w_psi_dot_slack_u_[index] != 0.0) {
-        variables[slack_start_index + i + (horizon_ + 1) * 3].emplace_back(
-            constraint_index, -1.0);
+        variables[slack_start_index + index + (horizon_ + 1) * 3]
+            .emplace_back(constraint_index, -1.0);
       }
 
       // dpsi_lower
@@ -377,8 +384,8 @@ void LateralMPCSolver::CalculateAffineConstraint(
 
       // slack_dl_l
       if (diag_matrix_w_psi_dot_slack_l_[index] != 0.0) {
-        variables[slack_l_start_index + i + (horizon_ + 1) * 3].emplace_back(
-            constraint_index + 1, 1.0);
+        variables[slack_l_start_index + index + (horizon_ + 1) * 3]
+            .emplace_back(constraint_index + 1, 1.0);
       }
 
       constraint_index += 2;
@@ -404,13 +411,13 @@ void LateralMPCSolver::CalculateAffineConstraint(
       lower_bounds->at(constraint_index) = 0.0;
       upper_bounds->at(constraint_index) =
           l_dot_slack_u_[i - slack_start_index - (horizon_ + 1)];
-    } else if (i < slack_start_index + (horizon_ + 1) * 2) {
+    } else if (i < slack_start_index + (horizon_ + 1) * 3) {
       // psi_slack_u
       variables[i].emplace_back(constraint_index, 1.0);
       lower_bounds->at(constraint_index) = 0.0;
       upper_bounds->at(constraint_index) =
           psi_slack_u_[i - slack_start_index - (horizon_ + 1) * 2];
-    } else if (i < slack_start_index + (horizon_ + 1) * 3) {
+    } else if (i < slack_start_index + (horizon_ + 1) * 4) {
       // dpsi_slack_u
       variables[i].emplace_back(constraint_index, 1.0);
       lower_bounds->at(constraint_index) = 0.0;
@@ -427,13 +434,13 @@ void LateralMPCSolver::CalculateAffineConstraint(
       lower_bounds->at(constraint_index) = 0.0;
       upper_bounds->at(constraint_index) =
           l_dot_slack_l_[i - slack_l_start_index - (horizon_ + 1)];
-    } else if (i < slack_l_start_index + (horizon_ + 1) * 2) {
+    } else if (i < slack_l_start_index + (horizon_ + 1) * 3) {
       // psi_slack_l
       variables[i].emplace_back(constraint_index, 1.0);
       lower_bounds->at(constraint_index) = 0.0;
       upper_bounds->at(constraint_index) =
           psi_slack_l_[i - slack_l_start_index - (horizon_ + 1) * 2];
-    } else if (i < slack_l_start_index + (horizon_ + 1) * 3) {
+    } else if (i < slack_l_start_index + (horizon_ + 1) * 4) {
       // dpsi_slack_l
       variables[i].emplace_back(constraint_index, 1.0);
       lower_bounds->at(constraint_index) = 0.0;
@@ -494,7 +501,7 @@ void LateralMPCSolver::CalculateAffineConstraint(
   // x_k+1 = Ak * x_k + Bk * u_k + B'_k * u'_k;
   for (int i = num_of_state_; i < num_of_state_ * (horizon_ + 1);
        i += num_of_state_) {
-    int k = i / num_of_state_;
+    int k = i / num_of_state_ - 1;
 
     Eigen::MatrixXd matrix_A_k;
     Eigen::MatrixXd matrix_B_k;
@@ -507,7 +514,7 @@ void LateralMPCSolver::CalculateAffineConstraint(
         variables[i - num_of_state_ + col].emplace_back(constraint_index + row,
                                                         matrix_A_k(row, col));
       }
-      variables[k + num_of_state_ * (horizon_ + 1)].emplace_back(
+      variables[num_of_state_ * (horizon_ + 1) + k].emplace_back(
           constraint_index + row, matrix_B_k(row, 0));
 
       lower_bounds->at(constraint_index + row) =
@@ -538,21 +545,16 @@ void LateralMPCSolver::ExtractSolution(OSQPSolution* osqp_solution,
 
   opt_l_.reserve(horizon_ + 1);
   opt_l_dot_.reserve(horizon_ + 1);
-  opt_psi_.reserve(horizon_);
-  opt_psi_dot_.reserve(horizon_);
+  opt_psi_.reserve(horizon_ + 1);
+  opt_psi_dot_.reserve(horizon_ + 1);
   opt_delta_.reserve(horizon_);
 
   for (size_t i = 0; i < horizon_ + 1; ++i) {
-    opt_l_.emplace_back(solution_[i]);
-  }
-  for (size_t i = horizon_ + 1; i < 2 * (horizon_ + 1); ++i) {
-    opt_l_dot_.emplace_back(solution_[i]);
-  }
-  for (size_t i = 2 * (horizon_ + 1); i < 3 * (horizon_ + 1); ++i) {
-    opt_psi_.emplace_back(solution_[i]);
-  }
-  for (size_t i = 3 * (horizon_ + 1); i < 4 * (horizon_ + 1); ++i) {
-    opt_psi_dot_.emplace_back(solution_[i]);
+    const size_t state_offset = i * num_of_state_;
+    opt_l_.emplace_back(solution_[state_offset]);
+    opt_l_dot_.emplace_back(solution_[state_offset + 1]);
+    opt_psi_.emplace_back(solution_[state_offset + 2]);
+    opt_psi_dot_.emplace_back(solution_[state_offset + 3]);
   }
   for (size_t i = num_of_state_ * (horizon_ + 1);
        i < num_of_state_ * (horizon_ + 1) + horizon_; ++i) {
