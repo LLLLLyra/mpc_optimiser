@@ -90,9 +90,28 @@ DenseMatrix DenseFromCSC(size_t rows, size_t cols,
                          const std::vector<OSQPFloat>& data,
                          const std::vector<OSQPInt>& indices,
                          const std::vector<OSQPInt>& indptr) {
+  if (indptr.size() != cols + 1) {
+    throw std::runtime_error("CSC indptr size mismatch");
+  }
+  if (data.size() != indices.size()) {
+    throw std::runtime_error("CSC data/indices size mismatch");
+  }
+  if (!indptr.empty() &&
+      static_cast<size_t>(indptr.back()) != data.size()) {
+    throw std::runtime_error("CSC final indptr does not match nnz");
+  }
   DenseMatrix dense(rows, std::vector<double>(cols, 0.0));
   for (size_t col = 0; col < cols; ++col) {
+    if (indptr[col] > indptr[col + 1]) {
+      throw std::runtime_error("CSC indptr not monotonic");
+    }
     for (OSQPInt idx = indptr[col]; idx < indptr[col + 1]; ++idx) {
+      if (idx < 0 || static_cast<size_t>(idx) >= data.size()) {
+        throw std::runtime_error("CSC index pointer out of range");
+      }
+      if (indices[idx] < 0 || static_cast<size_t>(indices[idx]) >= rows) {
+        throw std::runtime_error("CSC row index out of range");
+      }
       dense[indices[idx]][col] += data[idx];
     }
   }
@@ -207,8 +226,7 @@ void TestLateralAffineConstraintUsesCorrectSlackAndControlIndices() {
   const size_t control_constraint_start = state_constraint_count;
   const size_t slack_constraint_start = control_constraint_start + kHorizon;
   const size_t ineq_constraints =
-      solver.num_state() * (kHorizon + 1) * 4 + kHorizon * 2 +
-      8 * (kHorizon + 1);
+      state_constraint_count + kHorizon + kHorizon + 8 * (kHorizon + 1);
   const size_t eq_constraints_start = ineq_constraints;
 
   ExpectNear(dense[8][slack_start + 1], -1.0,
@@ -277,6 +295,11 @@ void TestLateralExtractSolutionMatchesInterleavedStateLayout() {
 void TestLateralSolveZeroReferenceProblem() {
   constexpr size_t kHorizon = 4;
   auto config = MakeLateralConfig(kHorizon);
+  auto* lat_config = config.mutable_lat_mpc_config();
+  lat_config->set_prev_delta(0.0);
+  for (int i = 0; i < lat_config->kappa_size(); ++i) {
+    lat_config->set_kappa(i, 0.0);
+  }
   mpc::LateralMPCSolver solver(config);
 
   const std::vector<double> zero_ref(kHorizon + 1, 0.0);

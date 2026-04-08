@@ -3,6 +3,10 @@
 #include "glog/logging.h"
 
 namespace mpc {
+#if !defined(csc_set_data) && defined(OSQPCscMatrix_set_data)
+#define csc_set_data OSQPCscMatrix_set_data
+#endif
+
 MPCSolver::MPCSolver(const MPCConfig& config)
     : config_(config),
       horizon_(config_.num_of_knots()),
@@ -80,11 +84,13 @@ OSQPData* MPCSolver::FormulateProblem() {
 
   data->n = kernel_dim;
   data->m = num_affine_constraint;
-  csc_set_data(data->P, kernel_dim, kernel_dim, P_data.size(), CopyData(P_data),
-               CopyData(P_indices), CopyData(P_indptr));
+  OSQPCscMatrix_set_data(data->P, kernel_dim, kernel_dim, P_data.size(),
+                         CopyData(P_data), CopyData(P_indices),
+                         CopyData(P_indptr));
   data->q = CopyData(q);
-  csc_set_data(data->A, num_affine_constraint, kernel_dim, A_data.size(),
-               CopyData(A_data), CopyData(A_indices), CopyData(A_indptr));
+  OSQPCscMatrix_set_data(data->A, num_affine_constraint, kernel_dim,
+                         A_data.size(), CopyData(A_data), CopyData(A_indices),
+                         CopyData(A_indptr));
   data->l = CopyData(lower_bounds);
   data->u = CopyData(upper_bounds);
   return data;

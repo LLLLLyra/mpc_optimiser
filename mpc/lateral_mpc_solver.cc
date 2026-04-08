@@ -265,18 +265,24 @@ void LateralMPCSolver::CalculateAffineConstraint(
   const size_t kNumParam = num_of_state_ * (horizon_ + 1) +
                            num_of_control_ * horizon_ +
                            num_of_slack_var_ * (horizon_ + 1);
-  const size_t kNumIneqConstraints = num_of_state_ * (horizon_ + 1) * 4 +
-                                     num_of_control_ * horizon_ * 2 +
-                                     num_of_slack_var_ * (horizon_ + 1);
+  const size_t kNumStateBoundConstraints =
+      num_of_state_ * (horizon_ + 1) * 2;
+  const size_t kNumControlConstraints = num_of_control_ * horizon_;
+  const size_t kNumControlRateConstraints = num_of_control_ * horizon_;
+  const size_t kNumSlackConstraints = num_of_slack_var_ * (horizon_ + 1);
+  const size_t kNumIneqConstraints = kNumStateBoundConstraints +
+                                     kNumControlConstraints +
+                                     kNumControlRateConstraints +
+                                     kNumSlackConstraints;
   const size_t kNumEqConstraints = num_of_state_ * (horizon_ + 1);
   const size_t kNumConstraints = kNumIneqConstraints + kNumEqConstraints;
   lower_bounds->resize(kNumConstraints);
   upper_bounds->resize(kNumConstraints);
 
-  CompensateSlackConstraints(true, horizon_ + 1, &l_slack_l_);
-  CompensateSlackConstraints(true, horizon_ + 1, &l_dot_slack_l_);
-  CompensateSlackConstraints(true, horizon_ + 1, &psi_slack_l_);
-  CompensateSlackConstraints(true, horizon_ + 1, &psi_dot_slack_l_);
+  CompensateSlackConstraints(false, horizon_ + 1, &l_slack_l_);
+  CompensateSlackConstraints(false, horizon_ + 1, &l_dot_slack_l_);
+  CompensateSlackConstraints(false, horizon_ + 1, &psi_slack_l_);
+  CompensateSlackConstraints(false, horizon_ + 1, &psi_dot_slack_l_);
 
   CompensateSlackConstraints(false, horizon_ + 1, &l_slack_u_);
   CompensateSlackConstraints(false, horizon_ + 1, &l_dot_slack_u_);
