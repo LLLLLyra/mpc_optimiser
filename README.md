@@ -188,7 +188,7 @@ b_{eq} =
 
 #### Inequality Constraints
 
-Generally, maximum ranges of acceleration and jerk of the ego vehicle constrain a speed planning problem. Slack variables are often applied to relax station and velocity constraints. In this section, we only support to relax $s_k$ and $\dot s_k$ with slack variables, denoting as $\sigma_{x,k}$ for upper bounds and $\mu_{x, k}$ for lower bounds.
+Generally, maximum ranges of acceleration and jerk of the ego vehicle constrain a speed planning problem. Slack variables are often applied to relax station and velocity constraints. In this section, we support relaxing both $s_k$ and $\dot s_k$ with slack variables, denoting $\sigma_{x,k}$ for upper bounds and $\mu_{x, k}$ for lower bounds.
 
 ```math
 \begin{aligned}
@@ -246,7 +246,7 @@ j_{min}\Delta t
 \end{aligned}
 ```
 
-Please Note that we do **NOT** support to constrain lower slack variables $\mu_{x, k}$ of $x_k$.
+Please note that longitudinal MPC supports both upper and lower slack variables for state bounds.
 
 # Lateral MPC
 

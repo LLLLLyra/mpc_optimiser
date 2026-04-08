@@ -93,6 +93,14 @@ void LongitudinalMPCSolver::CalculateKernel(std::vector<OSQPFloat>* P_data,
 
   // control
   const double dt_squared = delta_t_ * delta_t_;
+  if (horizon_ == 1) {
+    columns[num_of_state_ * (horizon_ + 1)].emplace_back(
+        num_of_state_ * (horizon_ + 1),
+        diag_matrix_r_[0] + diag_matrix_r_dot_[0] / dt_squared);
+    CSCInitHelper<double>(columns, P_data, P_indices, P_indptr);
+    return;
+  }
+
   columns[num_of_state_ * (horizon_ + 1)].emplace_back(
       num_of_state_ * (horizon_ + 1),
       diag_matrix_r_[0] + 2.0 * diag_matrix_r_dot_[0] / dt_squared);
@@ -146,13 +154,13 @@ void LongitudinalMPCSolver::CalculateOffset(std::vector<OSQPFloat>* q) {
   q->resize(kNumParam);
   int index = 0;
   for (size_t i = 0; i < horizon_; i++) {
-    q->at(index++) = s_ref_[i];
-    q->at(index++) = ds_ref_[i];
+    q->at(index++) = -diag_matrix_q_[0] * s_ref_[i];
+    q->at(index++) = -diag_matrix_q_[1] * ds_ref_[i];
   }
 
   Eigen::MatrixXd x_n_ref(2, 1);
   x_n_ref << s_ref_.back(), ds_ref_.back();
-  auto q_n_ref = matrix_q_n_ * x_n_ref;
+  auto q_n_ref = -matrix_q_n_ * x_n_ref;
   q->at(index++) = q_n_ref(0, 0);
   q->at(index++) = q_n_ref(1, 0);
 
@@ -343,10 +351,9 @@ void LongitudinalMPCSolver::ExtractSolution(OSQPSolution* osqp_solution,
   opt_a_.reserve(horizon_);
 
   for (size_t i = 0; i < horizon_ + 1; ++i) {
-    opt_s_.emplace_back(solution_[i]);
-  }
-  for (size_t i = horizon_ + 1; i < 2 * (horizon_ + 1); ++i) {
-    opt_v_.emplace_back(solution_[i]);
+    const size_t state_offset = i * num_of_state_;
+    opt_s_.emplace_back(solution_[state_offset]);
+    opt_v_.emplace_back(solution_[state_offset + 1]);
   }
   for (size_t i = num_of_state_ * (horizon_ + 1);
        i < num_of_state_ * (horizon_ + 1) + horizon_; ++i) {

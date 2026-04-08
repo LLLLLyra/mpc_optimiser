@@ -9,6 +9,7 @@
 #include <Eigen/Dense>
 
 #include "mpc/lateral_mpc_solver.h"
+#include "mpc/lon_mpc_solver.h"
 
 namespace {
 
@@ -50,6 +51,29 @@ class LateralMPCSolverTestHarness : public mpc::LateralMPCSolver {
   size_t horizon_size() const { return horizon_; }
 };
 
+class LongitudinalMPCSolverTestHarness : public mpc::LongitudinalMPCSolver {
+ public:
+  using mpc::LongitudinalMPCSolver::LongitudinalMPCSolver;
+
+  void BuildOffset(std::vector<OSQPFloat>* q) { CalculateOffset(q); }
+
+  void BuildKernel(std::vector<OSQPFloat>* P_data,
+                   std::vector<OSQPInt>* P_indices,
+                   std::vector<OSQPInt>* P_indptr) {
+    CalculateKernel(P_data, P_indices, P_indptr);
+  }
+
+  void ExtractFromVector(const std::vector<double>& solution) {
+    OSQPSolution osqp_solution{};
+    osqp_solution.x = const_cast<OSQPFloat*>(solution.data());
+    ExtractSolution(&osqp_solution, solution.size());
+  }
+
+  const Eigen::MatrixXd& terminal_q() const { return matrix_q_n_; }
+  size_t num_state() const { return num_of_state_; }
+  size_t num_var() const { return num_of_var_; }
+};
+
 mpc::MPCConfig MakeLateralConfig(size_t horizon) {
   mpc::MPCConfig config;
   config.set_delta_t(0.1);
@@ -83,6 +107,26 @@ mpc::MPCConfig MakeLateralConfig(size_t horizon) {
     lat_config->add_velocity(8.0 + static_cast<double>(i));
     lat_config->add_kappa(0.01 * static_cast<double>(i + 1));
   }
+  return config;
+}
+
+mpc::MPCConfig MakeLongitudinalConfig(size_t horizon) {
+  mpc::MPCConfig config;
+  config.set_delta_t(0.2);
+  config.set_num_of_knots(horizon);
+  config.set_max_iter(4000);
+  config.set_eps(1e-4);
+
+  auto* lon_config = config.mutable_lon_mpc_config();
+  lon_config->set_dare_max_itr(200);
+  lon_config->set_dare_tol(1e-6);
+  lon_config->set_prev_dds(0.3);
+  lon_config->set_s_init(0.0);
+  lon_config->set_ds_init(0.0);
+  lon_config->add_matrix_q(10.0);
+  lon_config->add_matrix_q(20.0);
+  lon_config->add_matrix_r(5.0);
+  lon_config->add_matrix_r_dot(2.0);
   return config;
 }
 
@@ -337,6 +381,71 @@ void TestLateralSolveZeroReferenceProblem() {
   }
 }
 
+void TestLongitudinalOffsetUsesWeightedNegativeReference() {
+  auto config = MakeLongitudinalConfig(2);
+  LongitudinalMPCSolverTestHarness solver(config);
+
+  solver.set_s_ref({1.0, 2.0, 3.0});
+  solver.set_ds_ref({4.0, 5.0, 6.0});
+
+  std::vector<OSQPFloat> q;
+  solver.BuildOffset(&q);
+
+  ExpectNear(q[0], -10.0, "s_0 offset");
+  ExpectNear(q[1], -80.0, "ds_0 offset");
+  ExpectNear(q[2], -20.0, "s_1 offset");
+  ExpectNear(q[3], -100.0, "ds_1 offset");
+
+  Eigen::Vector2d terminal_ref;
+  terminal_ref << 3.0, 6.0;
+  const Eigen::VectorXd terminal_q = -solver.terminal_q() * terminal_ref;
+  ExpectNear(q[4], terminal_q(0), "terminal s offset");
+  ExpectNear(q[5], terminal_q(1), "terminal ds offset");
+  ExpectNear(q[6], -15.0, "first acceleration offset");
+  for (size_t i = 7; i < q.size(); ++i) {
+    ExpectNear(q[i], 0.0, "remaining longitudinal offset entries");
+  }
+}
+
+void TestLongitudinalExtractSolutionMatchesInterleavedStateLayout() {
+  auto config = MakeLongitudinalConfig(2);
+  LongitudinalMPCSolverTestHarness solver(config);
+
+  std::vector<double> solution(solver.num_var(), 0.0);
+  for (size_t i = 0; i < solution.size(); ++i) {
+    solution[i] = static_cast<double>(i);
+  }
+
+  solver.ExtractFromVector(solution);
+
+  ExpectTrue((solver.opt_x() == std::vector<double>{0.0, 2.0, 4.0}),
+             "opt_x should follow interleaved state layout");
+  ExpectTrue((solver.opt_dx() == std::vector<double>{1.0, 3.0, 5.0}),
+             "opt_dx should follow interleaved state layout");
+  ExpectTrue((solver.opt_ddx() == std::vector<double>{6.0, 7.0}),
+             "opt_ddx should follow control layout");
+}
+
+void TestLongitudinalKernelHorizonOneControlWeight() {
+  auto config = MakeLongitudinalConfig(1);
+  LongitudinalMPCSolverTestHarness solver(config);
+
+  std::vector<OSQPFloat> P_data;
+  std::vector<OSQPInt> P_indices;
+  std::vector<OSQPInt> P_indptr;
+  solver.BuildKernel(&P_data, &P_indices, &P_indptr);
+
+  const DenseMatrix dense =
+      DenseFromCSC(solver.num_var(), solver.num_var(), P_data, P_indices,
+                   P_indptr);
+  const size_t control_index = solver.num_state() * (1 + 1);
+  const double dt = config.delta_t();
+  const double expected =
+      5.0 + 2.0 / (dt * dt);
+  ExpectNear(dense[control_index][control_index], expected,
+             "single-step control Hessian weight");
+}
+
 }  // namespace
 
 int main() {
@@ -346,6 +455,10 @@ int main() {
        TestLateralAffineConstraintUsesCorrectSlackAndControlIndices},
       {"solution_layout", TestLateralExtractSolutionMatchesInterleavedStateLayout},
       {"solve_smoke", TestLateralSolveZeroReferenceProblem},
+      {"lon_offset_signs", TestLongitudinalOffsetUsesWeightedNegativeReference},
+      {"lon_solution_layout",
+       TestLongitudinalExtractSolutionMatchesInterleavedStateLayout},
+      {"lon_kernel_h1", TestLongitudinalKernelHorizonOneControlWeight},
   };
 
   int failed = 0;
